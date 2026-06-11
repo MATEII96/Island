@@ -90,9 +90,38 @@ function localStore() {
             s.decorations[islandId] = decorations;
             save(s);
         },
+        async toggleHeart(islandId) {
+            const s = load();
+            if (!s.user) throw new Error('Conectează-te');
+            const k = `${s.user}:${islandId}`;
+            const island = s.islands.find(i => i.id === islandId);
+            if (!island) return;
+            if (s.hearts[k]) {
+                delete s.hearts[k];
+                island.hearts_count = Math.max(0, island.hearts_count - 1);
+            } else {
+                s.hearts[k] = true;
+                island.hearts_count++;
+            }
+            save(s);
+            return !!s.hearts[k];
+        },
+        async setIslandName(islandId, name) {
+            const s = load();
+            const island = s.islands.find(i => i.id === islandId);
+            if (!island || island.owner_id !== s.user) throw new Error('Nu e insula ta');
+            island.name = name.slice(0, 40);
+            save(s);
+        },
+        onAuthChange(cb) {}
+    };
+}
 
-        
+function supabaseStore() {
+    return {
+        async signIn(email) {
+            const { error } = await supabase.auth.signInWithOtp({ email });
+            
+        }
     }
-
-
 }
