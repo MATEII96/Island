@@ -18,10 +18,10 @@ function localStore() {
         const init = {user: null, profiles: {}, islands: [], decorations: {}, hearts: {} };
         localStorage.setItem(KEY, JSON.stringify(init));
         return init;
-    };
-    const save = (s) => localStorage.setItem(KEY, JSON.stringify(s));
+      };
+      const save = (s) => localStorage.setItem(KEY, JSON.stringify(s));
 
-    return{
+      return{
         async signIn(email) {
             const s = load();
             const id = 'u_' + email.replace(/\W)/g, '').slice(0, 8);
@@ -41,6 +41,56 @@ function localStore() {
             const s = load();
             return s.user ? s.profiles[s.user] : null;
         },
+        async getOcean(){
+            const s = load();
+            return s.islands.map(i => ({
+                ...i,
+                owner_username: s.profiles[i.owner_id]?.username || 'anonim'
+            }))
+        },
+        async getMyIsland() {
+            const s = load();
+            if (!s.user) return null;
+            return s.islands.find(i => i.owner_id === s.user) || null;
+        },
+        async claimIsland(x, y, name) {
+            const s = load();
+            if (!s.user) throw new Error('Trebuie să te conectezi');
+            if (s.islands.find(i => i.owner_id === s.user)) throw new Error('Ai deja o insulă');
+            if (s.islands.find(i => i.x === x && i.y === y)) throw new Error('Slotul e ocupat');
+            const cost = 50;
+            if (s.profiles[s.user].coins < cost) throw new Error('Nu ai destule monede');
+            s.profiles[s.user].coins -= cost;
+            const island = {
+                id: 'i_' + Date.now(),
+                owner_id: s.user, x, y, name: name || 'Insula mea',
+                hearts_count: 0, visits_count: 0
+            };
+            s.islands.push(island);
+            s.decorations[island.id] = [];
+            save(s);
+            return island;
+        },
+        async getIsland(id) {
+            const s = load();
+            const island = s.island.find(i => i.id === id);
+            if (!island) return null;
+            return {
+                ...island,
+                owner_username: s.profiles[island.owner_id]?.username || 'anonim',
+                decorations: s.decorations[island.id] || [],
+                liked_by_me: s.user ? !!s.hearts[`${s.user}:${island.id}`] : false
+            };
+        },
+        async saveDecorations(islandId, decorations) {
+            const s = load();
+            if (!s.user) throw new Error('Trebuie să te conectezi');
+            const island = s.islands.find(i => i.id === islandId);
+            if (!island || island.owner_id !== s.user) throw new Error('Nu e insula ta');
+            s.decorations[islandId] = decorations;
+            save(s);
+        },
+
         
     }
 
