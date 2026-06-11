@@ -26,8 +26,22 @@ function localStore() {
             const s = load();
             const id = 'u_' + email.replace(/\W)/g, '').slice(0, 8);
             s.user = id;
-            
-        }
+            if (!s.profiles[id]) {
+              s.profiles[id] = { id, username: email.split('@')[0], coins: STARTING_COINS };
+            }
+            save(s);
+            return s.profiles[id];
+        },
+        async signOut() {
+            const s = load();
+            s.user = null;
+            save(s);
+        },
+        async getProfile() {
+            const s = load();
+            return s.user ? s.profiles[s.user] : null;
+        },
+        
     }
 
 
