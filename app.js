@@ -123,13 +123,13 @@ function supabaseStore() {
             const { error } = await supabase.auth.signInWithOtp({ email });
             if (error) throw error;
             alert('Verifică emailul pentru linkul magic de autentificare.');
-        };
+        },
         async signOut() { await supabase.auth.signOut(); },
         async getProfile() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return null;
             const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-            
+            return data;
         }
     }
 }
