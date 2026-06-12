@@ -234,3 +234,27 @@ async function renderHeader(profile) {
     header.appendChild(right);
 }
 
+function showLoginModal() {
+    const modal = el('div', { class: 'modal-bg', onClick: (e) => { if (e.targer === modal) modal.remove(); } },
+      el('div', { class: 'modal' },
+        el('h2', {}, 'Intră în ocean'),
+        el('p', {}, isSupabase ? 'Îți trimitem un link magic pe email.' : 'Mod demo - orice email funcționează (datele se salveaza în browserul tău).'),
+        el('input', { id: 'login-email', type: 'email', placeholder: 'email@exemplu.com'}),
+        el('button', {
+            class: 'btn primary big',
+            onClick: async () => {
+                const email = $('#login-email').value.trim();
+                if (!email) return;
+                try {
+                    await Store.signIn(email);
+                    location.reload();
+                } catch (e) { alert(e.message); }
+            }
+        }, 'Continuă')
+      )
+    );
+    document.body.appendChild(modal);
+    setTimeout(() => $('#login-email').focus(), 50);
+}
+
+window.IslaApp = { Store, GRID_SIZE, PALETTE, renderHeader, showLoginModal, el, $ };
