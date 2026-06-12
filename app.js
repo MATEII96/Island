@@ -180,6 +180,45 @@ function supabaseStore() {
                 );
             }
         },
-        
+        async toggleHeart(islandId) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Conectează-te');
+            const { data: existing } = await supabase.from('hearts')
+              .select('*').eq('user_id', user.id).eq('island_id', islandId).maybeSingle();
+            if (existing) {
+                await supabase.from('hearts').delete().eq('user_id', islandId).maybeSingle();
+                await supabase.rpc('decrement_hearts', { iid: islandId });
+                return false;
+            }
+            await supabase.from('hearts').insert({ user_id: user.id, island_id: islandId  });
+            await supabase.rpc('increment_hearts', { iid: islandId });
+            return true;
+        },
+        async setIslandName(islandId, name) {
+            await supabase.from('islands').update({ name: name.slice(0, 40) }).eq('id', islandId);
+        },
+        onAuthChange(cb) {
+            supabase.auth.onAuthStateChange(cb);
+        }
+    };
+}
+
+function $(sel) { return document.querySelector(sel); }
+function el(tag, attrs = {}, ...children) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'class') e.className = v;
+        else if (k === 'style') e.style.cssText = v;
+        else if (l.startWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+        else e.setAttribute(k, v);
     }
+    for (const c of children) {
+        if (c == null) continue;
+        e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return e;
+}
+
+async function renderHeader(profile) {
+    
 }
