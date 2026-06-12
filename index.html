@@ -32,6 +32,24 @@ header{
     background: var(--mint); color: white;
     font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 700;
 }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.coins, .hearts-left {
+    background: var(--sand-2); padding: 6px 14px; border-radius: 999px;
+    font-weight: 600; cursor: pointer; transition: transform 0.1s;
+}
+.coins:hover, .hearts-left:hover { transform: scale(1.05); }
+.hearts-left { background: #ffd1dc; }
+.username { font-size: 14px; color: #555}
+.btn { 
+    border: none; padding: 10px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: var(--ink); color: white; }
+.btn.ghost { background: transparent; color: var(--ink); }
+
 </style>
 </head>
 <body>
