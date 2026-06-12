@@ -130,6 +130,28 @@ function supabaseStore() {
             if (!user) return null;
             const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
             return data;
+        },
+        async getOcean() {
+            const { data } = await supabase.from('islands')
+              .select('*, profiles!islands_owner_id_fkey(username');
+            return (data || []).map(i => ({ ...i, owner_username: i.profiles?.username || 'anonim'}));
+        },
+        async getMyIsland() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return null;
+            const { data } = await supabase.from('islands').select('*').eq('owner_id', user.id).maybeSingle();
+            return data;
+        },
+        async claimIsland(x, y, name) {
+            const { data: { user} } = await supabase.auth.getUser();
+            if (!user) throw new Error('Conectează-te');
+            const { error: cErr } = await supabase.rpc('spend_coins', { amount: 50});
+            if (cErr) throw new Error('Nu ai destule monede');
+            const { data, error } = await supabase.from('islands')
+              .insert({ owner_id: user.id, x, y, name: name || 'Insula mea'})
+              .select().single();
+            if (error) throw new Error(error.message);
+            return data;
         }
     }
 }
