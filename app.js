@@ -152,6 +152,34 @@ function supabaseStore() {
               .select().single();
             if (error) throw new Error(error.message);
             return data;
-        }
+        },
+        async getIsland(id) {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data : island } = await supabase.from('islands')
+              .select('*, profiles!islands_owner_id_fkey(username').eq('id', id).single();
+            if (!island) return null;
+            const { data: decorations } = await supabase.from('decorations').select('*').eq('island_id', id);
+            let liked = false;
+            if (user) {
+                const { data: h } = await supabase.from('hearts').select('*')
+                  .eq('user_id', user.id).eq('island_id', id).maybeSingle();
+                liked = !!h;
+            }
+            return{
+                ...island,
+                owner_username: island.profiles?.username || 'anonim',
+                decorations: decorations || [],
+                liked_by_me: liked
+            };
+        },
+        async saveDecorations(islandId, decorations) {
+            await supabase.from('decorations').delete().eq('island_id', islandId);
+            if (decorations.lenght) {
+                await supabase.from('decorations').insert(
+                    decorations.map(d => ({ island_id: islandId, emoji: d.emoji, px: d.px, py: d.py, scale: d.scale || 1 }))
+                );
+            }
+        },
+        
     }
 }
