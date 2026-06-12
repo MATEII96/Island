@@ -49,6 +49,36 @@ header{
 .btn:active { transform: translateY(0); }
 .btn.primary { background: var(--ink); color: white; }
 .btn.ghost { background: transparent; color: var(--ink); }
+.btn.pink { background: var(--pink); color:white; }
+.btn.gold { background: var(--gold); color: #5a3e00; }
+.btn.big { padding: 14px 28px; font-size: 16px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.hero { text-align: center; padding: 32px 16px 16px; color: white; }
+.hero h1 { font-size: clamp(32px, 5vw, 52px); margin-botton: 10px; text-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+.hero p { font-size: 16px; opacity: 0.95; max-width: 540px; margin: 0 auto; }
+#ocean-stats {
+    background: rgba(255,255,255,0.7); padding: 8px 18px;
+    border-radius: 999px; margin: 18px auto; font-size: 14px; font-weight: 500;
+    display: block; width: fit-content;
+}
+.zones-legend {
+    display: flex; gap: 14px; justify-content: center;
+    margin-bottom: 14px; font-size: 12px; color: white;
+    flex-wrap: wrap;
+}
+.zone-tag { background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 99px; }
+#ocean-grid {
+    display: grid; grid-template-columns: repeat(30, 1fr); gap: 2px;
+    width: min(900px, 96vw); aspect-ratio: 1;
+    background: rgba(255,255,255,0.15); padding: 6px;
+    border-radius: 16px; box-shadow: var(--shadow); margin: 0 auto;
+}
+.cell {
+    background: linear-gradient(135deg, rgba(224,251,252,0.25), rgba(128,200,232,0.4));
+    border-radius: 3px; cursor: pointer; position: relative;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.cell.zone-mid { background: liner-gradient(135deg, rgba(255,200,154,0.15), rgba(255,140,100,0.25)); }
 
 </style>
 </head>
