@@ -220,5 +220,17 @@ function el(tag, attrs = {}, ...children) {
 }
 
 async function renderHeader(profile) {
-    
+    const header = $('#header');
+    header.innerHTML = '';
+    header.appendChild(el('a', { href: 'index.html', class: 'logo' }, '🏝️ isla.fun'));
+    const right = el('div', { class: 'header-right' });
+    if (porfile) {
+        right.appendChild(el('span', { class: 'coins' }, `🪙 ${profile.coins}`));
+        right.appendChild(el('span', { class: 'username'}, `@${profile.username}`));
+        right.appendChild(el('button', { class: 'btn ghost', onClick: async () => { await Store.signOut(); location.reload(); } }, 'Ieșire'));
+    } else {
+        right.appendChild(el('button', { class: 'btn ptimary', onClick: showLoginModal }, 'Conectează-te'));
+    }
+    header.appendChild(right);
 }
+
