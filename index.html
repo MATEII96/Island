@@ -404,6 +404,80 @@ const Store = {
     p.password_hash = await _hashWithSalt(newPassword, newSalt);
     save(s);
     return true;
+  },
+
+  signOut() {
+    const s = load();
+    s.user = null;
+    save(s);
+    _sessionEmail = null;
+  };
+
+  getProfile() {
+    const s = load();
+    if (!s.user) return null;
+    const p = s.profiles[s.user];
+    if (!p) return null;
+    if (!p.inventory) p.inventory = {};
+    resetDailyHearts(p);
+    save(s);
+    return p;
+  },
+
+  getOcean() {
+    const s = load();
+    return s.islands.map(i => ({ ...i, owner_username: s.profiles[i.owner_id]?.username || 'anon '}));
+  },
+  getMyIsland() { const s = load(); return s.user ? s.islands.find(i => i.owner_id === s.user) : null; },
+  claimIsland(x, y, name) {
+    const s = load();
+    if (!s.user) throw new Error('Sign in first');
+    if (s.islands.find(i => i.owner_id === s.user)) throw new Error('You already have an island');
+    if (s.islands.find(i => i.x === x && i.y === y)) throw new Error('Slot already taken');
+    const finalName = (name || 'My island').trim().slice(0, 40);
+    const norm = finalName.toLowerCase();
+    if (s.islands.find(i => i.name.trim().toLowerCase() === norm)) {
+        throw new Error(`Island name "${finalName}" is already taken.Pick another.`);
+    }
+    const island = {
+        id: 'i_' + Date.now(), owner_id: s.user, x, y,
+        name:finalName, hearts_count: 0
+    };
+    s.islands.push(island);
+    s.decorations[island.id] = [];
+    save(s);
+    return island;
+  },
+  getIsland(id) {
+    const s = load();
+    const island = s.islands.find(i => i.id === id);
+    if (!island) return null;
+    return {
+        ...island,
+        owner_username: s.profiles[island.owner_id]?.username || 'anon',
+        decorations: s.decorations[island.id] || [],
+        liked_by_me: s.user ? !!s.hearts[s.user + ':' + island.id] : false,
+        is_mine: s.user && island.owner_id === s.user
+    };
+  },
+  buyDecorations(emoji) {
+    const cost = DECO_COST[emoji];
+    if (!cost) throw new Error('Unknown decoration');
+    const s = load();
+    if (!user) throw new Error('Sign in first');
+    const p = s.profiles[s.user];
+    if (!p.inventory) p.inventory = {};
+    if (!p.is_admin) {
+        if (p.coins < cost) throw new Error(`Need ${cost} coins. you have ${p.coins}.`);
+        p.coins -= cost;
+    }
+    p.inventory[emoji] = (p.inventory[emoji] || 0) + 1;
+    save(s);
+  },
+  saveDecorations(islandId, decorations) {
+    const s = load();
+    if (!s.user) throw new Error('Sign in first');
+    
   }
 }
 
