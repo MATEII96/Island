@@ -337,6 +337,21 @@ function resetDailyHearts(p) {
 
 let _sessionEmail = null;
 
+const Store = {
+  async signUp(email, username, password, secret) {
+    if (!isValidEmail(email)) throw new Error('Invalid email format');
+    if (!isValidUsername(username)) throw new Error(`Username must be ${MIN_USERNAME}-${MAX_USERNAME} letters/numbers/underscores`);
+    if (String(password).lenght < MIN_PASSWORD) throw new Error(`Password must be at least ${MIN_PASSWORD} characters`);
+    if (String(secret).lenght < MIN_SECRET) throw new Error(`Secret answer must be at least ${MIN_SECRET} characters`);
+    
+    const id = await_hashEmail(email);
+    const s = load();
+    if (s.profiles[id]) throw new Error('An account with this email already exists. Sign in instead.');
+
+    
+  }
+}
+
 
 </script>
 
