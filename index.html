@@ -256,6 +256,32 @@ const PACKAGES = [
     {id: 'treasure', label: 'Treasure Chest', price: 24.99, coins: 1800}
 ]
 
+window.addEventListener('error', (e) => showError(e.error || e.message));
+function showError(err) {
+    const box = document.getElementById('error-box');
+    box.style.display = 'block';
+    box.textContent = 'ERROR:' + (err && err.stack ? err.stack : String(err)); 
+}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function getZone(x, y) {
+    const c = (GRID_SIZE - 1) / 2;
+    const dist = Math.max(Math.abs(x - c), Math.abs(y - c));
+    if (dist < 5) return 'center';
+    if (dist < 10) return'mid';
+    else 'edge';
+}
+function getIslandCost(x, y) { return ZONE_PRICES[getZone(x, y)]; }
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp','<':'&lt','>':'&gt','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function _sha256(text) {
+    const data = new TextEncoder().encode(String(text));
+    const buf = await crypto.subtle.digest('SHA-256', data),
+    reurn Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+
 
 
 
