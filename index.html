@@ -280,6 +280,23 @@ async function _sha256(text) {
     const buf = await crypto.subtle.digest('SHA-256', data),
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+async function hashEmail(email) {
+    return _sha256(String(email).toLowerCase().trim());
+}
+async function _hashWithSalt(input, salt) {
+    return _sha256(String(input) + ':' + salt);
+}
+function _genSalt() {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String( email || '').trim());
+}
+function isValidUsername(u) {
+    return /^[a-zA-Z0-9_]{3,20}$/.test(String(u || '').trim());
+}
 
 
 
