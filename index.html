@@ -219,6 +219,38 @@ header{
 
 <script>
 
+const EXPECTED_ADMIN_HASH = '60b02749f845d2eb4aa971207bfa57a72162711360c5382ce0efbd643a1f7432';
+const STRIPE_LINKS = {
+    starter: '',
+    best: '',
+    treasure: ''
+};
+
+const GRID_SIZE = 30;
+const STARTING_COINS = 0;
+const DAILY_HEARTS = 3;
+const COIN_PER_HEART = 1;
+const STORAGE_KEY = 'isla_v6';
+const MIN_PASSWORD = 6;
+const MIN_SECRET = 3;
+const MIN_USERNAME = 3;
+const MAX_USERNAME = 20;
+
+const ZONE_PRICES = { center: 250, mid: 100, edge: 30 };
+
+const DECORATIONS = [
+    { emoji: '🌴', cost: 2 },  { emoji: '🌺', cost: 2 },
+    { emoji: '🐚', cost: 2 },  { emoji: '🏖️', cost: 2 },
+    { emoji: '🌊', cost: 2 },  { emoji: '⛵', cost: 5 },
+    { emoji: '🦀', cost: 5 },  { emoji: '🐠', cost: 5 },
+    { emoji: '🔥', cost: 5 },  { emoji: '🐢', cost: 5 },
+    { emoji: '🦩', cost: 5 },  { emoji: '🗼', cost: 10 },
+    { emoji: '🪸', cost: 10 },  { emoji: '🏠', cost: 10 },
+    { emoji: '🍹', cost: 10}
+];
+const DECO_COST = Object.fromEntries(DECORATIONS.map(d => [d.emoji, d.cost]));
+
+
 
 
 
