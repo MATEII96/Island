@@ -525,8 +525,13 @@ const Store = {
     const finalName = name.trim().slice(0, 40);
     if (!finalName) throw new Error('Name cannot be empty');
     const norm = finalName.toLowerCase();
-    
-  }
+    if (s.islands.find(i => i.id !== islandId && i.name.trim().toLowerCase() === norm)) {
+        throw new Error(`Island name"${finalName}" is already taken. Pick another.`);
+    }
+    island.name = finalName;
+    save(s);
+  },
+  
 }
 
 
