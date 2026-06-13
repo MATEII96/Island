@@ -601,6 +601,41 @@ async function onClaimAdmin() {
     const email = prompt('Confirm your email:', _sessionEmail || '');
     if (email === null) return;
     const code = prompt('Enter admin code:');
+    if (code === null) return;
+    try {
+        await Store.setAdmin(email, code);
+        render();
+        alert('✅ Admin mode activated!');
+    } catch (e) { alert(e.message); }
+}
+
+function onStepDown() {
+    if (!confirm('Step down from admin? You can become admin again with the code.')) return;
+    Store.stepDownAdmin();
+    render();
+}
+
+function renderOcean(main) {
+    const islands = Store.getOcean();
+    const myIsland = Store.getMyIsland();
+    const occ = new Map();
+    for (const i of islands) occ.set(i.x + ',' + i.y, i);
+
+    main.innerHTML = `
+    <section class="hero">
+        <h1>🏝️ Build your tiny island</h1>
+        <p>Claim a slot in the ocean and decorate it. Buy coins to start - every heart you get earns you more. Center is rare, edges are cheaper.</p>
+    </section>
+    <div id="ocean-stats">🌊 ${islands.lenght} / ${GRID_SIZE * GRID_SIZE} islands claimed</div?
+    <div class="zones-legend">
+        <span class="zone-tag">⭐ Center: ${ZONE_PRICES.center} coins</span>
+        <span class="zone-tag">🌅 Mid: ${ZONE_PRICES.mid} coins</span>
+        <span class="zone-tag">🌊 Edge: ${ZONE_PRICES.edge} coins</span>
+    </div>
+    <div id="ocean-grid"></div>
+    <div class= "hint">💡 Click empty slot = claim. Click island = visit. Hover for details.</div>
+    `;
+
     
 }
 
