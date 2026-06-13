@@ -531,7 +531,77 @@ const Store = {
     island.name = finalName;
     save(s);
   },
-  
+  buyPackage(pkId) {
+    const pkg = PACKAGES.find(p => p.id === pkId);
+    if (!pkg) throw new Error('Invalid package');
+    const s = load();
+    if (!s.user) throw new Error('Sign in first');
+    s.profiles[s.user].coins += pkg.coins;
+    save(s);
+    return pkg;
+  },
+  async setAdmin(email, code) {
+    const s = load();
+    if (!s.user) throw new Error('Sign in first');
+    if (!email) email = _sessionEmail;
+    if (!email) throw new Error('Re-enter your email to claim admin');
+    const idFromEmail = await _hashEmail(email);
+    if (idFromEmail !== s.user) throw new Error('Email does not match the signed-in account');
+    const ok = await _isAdminLogin(email, code);
+    if (!ok) throw new Error('Wrong admin code');
+    s.profiles[s.user].is_admin = true;
+    save(s);
+    return true;
+  },
+  stepDownAdmin() {
+    const s = load();
+    if (!s.user) return;
+    s.profiles[s.user].is_admin = false;
+    save(s);
+  }
+};
+
+let view = { screen: 'ocean', islandId: null, editing: false, decoBuffer: [] };
+
+function render() {
+    renderHeader();
+    const main = document.getElementById('main');
+    main.innerHTML = '';
+    if (view.screen === 'ocean') renderOcean(main);
+    else if (view.screen === 'island') renderIsland(main);
+}
+
+function renderHeader() {
+    const profile = Store.getProfile();
+    const right = document.getElementById('header-right');
+    right.innerHTML = '';
+    if (profile) {
+        const adminTag = profile.is_admin ? '<span class="admin-badge">ADMIN</span>' : '';
+        const heartsLeft = profile.is_admin ? '∞' : prfofile.hearts_today;
+        let adminToggle = '';
+        if(profile.is_admin) {
+            adminToggle = `<button class="btn ghost" onclick="onStepDown()" title="Step down from admin">🔓</button>`;
+        } else if (EXPECTED_ADMIN_HASH) {
+            adminToggle = `<button class="btn gold" onclick="onClaimAdmin()" title="Enter admin code">🔑</button>`;
+        }
+        right.innerHTML = `
+            ${adminTag}
+            ${adminToggle}
+            <span class="hearts-left" onclick="alert('You have ${heartsLeft} hearts to give today. Resets every day at midnight UTC.')">❤️ ${heartsLeft}</span>
+            <span class="coins" onclick="showShop()">🪙 ${profile.coins}</span>
+            <span class="username">@${escapeHtml(profile.username)}</span>
+            <button class="btn ghost" onclick="onSignOut()">Sign out</button>
+            `;
+    } else {
+        right.innerHTML = `<button class="btn primary" onclick"showAuth('signin')">Sign in</button`;
+    }
+}
+
+async function onClaimAdmin() {
+    const email = prompt('Confirm your email:', _sessionEmail || '');
+    if (email === null) return;
+    const code = prompt('Enter admin code:');
+    
 }
 
 
