@@ -161,7 +161,49 @@ header{
     border-radius: 50%; position: relative; overflow: visible;
     margin-bottom: 18px; box-shadow: var(--shadow);
 }
-
+#island-canvas.editing { outline: 3px dashed white; outline-offset: 8px; }
+.deco {
+    position: absolute; font-size: 36pc; cursor: grab;
+    user-select: none; transform: translate(-50%, -50%);
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0,.2));
+}
+.deco:active { cursor: grabbing; }
+.deco.removable:hover{ filter: drop-shadow( 0 0 8px red); }
+.panel-label {
+    background: rgba(255,255,255,0.85); padding: 5px 14px;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+    margin: 8px auto 4px; color: var(--ink); display: inline-block;
+}
+.palette-item:hover:not(.disabled) { background: rgba(6,214,160,0.2); }
+.palette-item.disabled { opacity: 0.35; cursor: not-allowed; }
+.palette-emoji { font-size: 26px; }
+.palette-cost { font-size: 11px; font-weight: 600; color: #777; }
+.palette-cost.have { color: var(--mint); font-weight: 700; }
+#island-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+#error-box { 
+    background: #ffe5e5; color: #a00; padding: 14px;
+    margin: 14px; border-radius: 8px; font-family: monospace;
+    white-space: pre-wrap; font-size: 12px;
+}
+.pkg-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px; margin-top: 8px;
+}
+.pkg {
+    background: white; border: 2px solid #e0e0e0; border-radius: 14px;
+    padding: 16px; text-align: center; position: relative; cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s;
+}
+.pkg:hover { transform: translateY(-2px); border-color: var(--mint); }
+.pkg.featured { border-color: var(--gold); }
+.pkg-badge {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #5a3e00; font-size: 11px;
+    padding: 3px 10px; border-radius: 999px; font-weight: 700;
+}
+.pkg-coins { font-size: 28px; font-weight: 700; margin: 8px 0 4px; }
+.pkg-price { font-size: 18px; color: var(--ink); font-weight: 600; }
+.admin-note { font-size: 11px; color: var(--mint); font-weight: 600; margin-top: 4px; }
 </style>
 </head>
 <body>
