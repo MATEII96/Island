@@ -297,9 +297,45 @@ function isValidEmail(email) {
 function isValidUsername(u) {
     return /^[a-zA-Z0-9_]{3,20}$/.test(String(u || '').trim());
 }
+async function _isAdminLogin(email, code) => {
+    if (!EXPECTED_ADMIN_HASH || !email || !code) return false;
+    const data = new TextEncoder().encode(String(email).toLowerCase() + ':' + String(code));
+    const buf = await crypto.subtle.digest('SHA-256', data);
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return hash === EXPECTED_ADMIN_HASH;
+}
 
+window.setupAdmin = async (email, code) => {
+    const data = new TextEncoder().encode(String(email).toLowerCase() + ':' + String(code));
+    const buf = await crypto.subtle.digest('SHA-256', data);
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    console.log('%c✓ Admin hash for ' + email + ':', 'color:#06d6a0;font-weight:bold;font-size:14px');
+    console.log("'" + hash + "'");
+    console.log('%cReplace EXPECTED_ADMIN_HASH in the file with the hash above.', 'color:#888');
+    return hash;
+};
 
+function load() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch (e) { }
+    const initial = { user:null, profiles: {}, islands: [], decorations: {}, hearts: {} };
+    save(initial);
+    return initial;
+}
+function save(s) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+    catch (e) { showError('Browser blocked storage: ' + e.message); }
+}
+function resetDailyHearts(p) {
+    if (p.hearts_reset_date !== todayStr()) {
+        p.hearts_today = DAILY_HEARTS;
+        p.hearts_reset_date = todayStr();
+    }
+}
 
+let _sessionEmail = null;
 
 
 </script>
