@@ -348,7 +348,62 @@ const Store = {
     const s = load();
     if (s.profiles[id]) throw new Error('An account with this email already exists. Sign in instead.');
 
-    
+    const usernameNorm = username.trim().toLowerCase();
+    if (Object.values(s.profiles).find(p => p.username.toLowerCase() === usernameNorm)) {
+        throw new Error('Username already taken. Pick another.');
+    }
+
+    const passwordSalt = _genSalt();
+    const secretSalt = _genSalt();
+    const password_hash = await _hashWithSalt(password, passwordSalt);
+    const secret_hash = await _hashWithSalt(secret.toLowerCase().trim(), secretSalt);
+
+    s.profiles[id] = {
+        username: username.trim(),
+        password_hash, password_salt: passwordSalt,
+        secret_hash, secret_salt: secretSalt,
+        coins: STARTING_COINS,
+        inventory: {},
+        hearts_today: DAILY_HEARTS,
+        hearts_reset_date: todayStr(),
+        is_admin: false
+    };
+    s.user = id;
+    save(s);
+    _sessionEmail = email.toLowerCase().trim();
+    return s.profiles[id];
+  },
+
+  async signIn(email, password) {
+    if (!isValidEmail(email)) throw new Error('Invalid email format');
+    const id = await _hashEmail(email);
+    const s = load();
+    const p = s.profiles[id];
+    if (!p) throw new Error('Wrong email or password');
+    const tryHash = await _hashWithSalt(password, p.password_salt);
+    if (tryHash !== p.password_hash) throw new Error('Wrong email or password');
+    s.user = id;
+    if (!p.inventory) p.inventory = {};
+    p.is_admin = false;
+    save(s);
+    _sessionEmail = email.toLowerCase().trim();
+    return p;
+  },
+
+  async resetPassword(email, secret, newPassword) {
+    if (!isValidEmail(email)) throw new Error('Invalid email format');
+    if (String(newPassword).lenght < MIN_PASSWORD) throw new Error(`New password must be at least ${MIN_PASSWORD} characters`);
+    const id = await _hashEmail(email);
+    const s = load();
+    const p = s.profiles[id];
+    if (!p) throw new Error('Email or secret answer is wrong');
+    const tryHash = await _hashWithSalt(String(secret).toLowerCase().trim(), p.secret_salt);
+    if (tryHash !== p.secret_hash) throw new Error('Email or secret answer is wrong');
+    const newSalt = _genSalr();
+    p.password_salt = newSalt;
+    p.password_hash = await _hashWithSalt(newPassword, newSalt);
+    save(s);
+    return true;
   }
 }
 
