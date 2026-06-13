@@ -477,6 +477,54 @@ const Store = {
   saveDecorations(islandId, decorations) {
     const s = load();
     if (!s.user) throw new Error('Sign in first');
+    const island = s.islands.find(i => i.id === islandId);
+    if (!island || island.owner_id !== s.user) throw new Error('Not your island');
+    const oldDecos = s.decorations[islandId] || [];
+    const oldCount = {};
+    oldDecos.forEach(d => oldCount[d.emoji] = (oldCount[d.emoji] || 0) + 1);
+    const newCount = {};
+    decorations.forEach(d => newCount[d.emoji] = (newCount[d.emoji] || 0) + 1);
+    const p = s.profiles[s.user];
+    if (!p.inventory) p.inventory = {};
+    const allEmojis = new Set([...Object.keys(oldCount), ...Object.keys(newCount)]);
+    for (const emoji of allEmojis) {
+        const old = oldCount[emoji] || 0;
+        const nw = newCount[emoji] || 0;
+        const delta = old - nw;
+        const newInv = (p.inventory[emoji] || 0) + delta;
+        if (!p.is_admin && newInv < 0) {
+            throw new Error(`Not enough ${emoji} in inventory to place that many`);
+        }
+        p.inventory[emoji] = Math.max(0, newInv);
+    }
+    s.decorations[islandId] = decorations;
+    save(s);
+  },
+  giveHeart(islandId) {
+    const s = load();
+    if (!s.user) throw new Error('Sign in first');
+    const island = s.islands.find(i => i.id === islandId);
+    if (!island) throw new Error('Island not found');
+    if (island.owner_id === s.user) throw new Error("Can't heart your own island");
+    const k = s.user + ':' + islandId;
+    if (s.hearts[k]) throw new Error('Already hearted this island');
+    const p = s.profiles[s.user];
+    resetDailyHearts(p);
+    if (!p.is_admin && p.hearts_today <= 0) throw new Error('No hearts left today ( reset tomorrow)');
+    if (!p.is_admin) p.hearts_today--;
+    s.hearts[k] = true;
+    island.hearts_count++;
+    const owner = s.profiles[island.owner_id];
+    if (owner) owner.coins += COIN_PER_HEART;
+    save(S);
+  },
+  setIslandNmae(islandId, name) {
+    const s = load();
+    const island = s.islands.find(i => i.id === islandId);
+    if (!island || island.owner_id !== s.user) throw new Error('Not your island');
+    const finalName = name.trim().slice(0, 40);
+    if (!finalName) throw new Error('Name cannot be empty');
+    const norm = finalName.toLowerCase();
     
   }
 }
