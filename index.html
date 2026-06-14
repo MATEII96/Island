@@ -724,6 +724,68 @@ function renderHeartButton(island, profile, isOwner) {
     return `<button class="heart-btn" onclick="onHeart()">❤️ ${island.hearts_count}</button>`;
 }
 
+function getAvailableInventory() {
+    const profile = Store.getProfile();
+    if (!profile) return {};
+    const inv = { ...(profile.inventory || {}) };
+    if (!view.editing) return inv;
+    const island =  Store.getIsland(view.islandId);
+    if (!island) return inv;
+    const origCount = {};
+    island.decorations.forEach(d => origCount[d.emoji] = (origCount[d.emoji] || 0) + 1);
+    const newCount = {};
+    view.decoBuffer.forEach(d => newCount[d.emoji] = (newCount[d.emoji] || 0) + 1);
+    const all = new Set([...Object.keys(origCount), ...Object.keys(newCount)]);
+    for (const emoji of all) {
+        const delta = (origCount[emoji] || 0) - (newCount[emoji] || 0);
+        inv[emoji] = (inv[emoji] || 0) + delta;
+    }
+    return inv;
+}
+
+function renderInventoryPanel() {
+    const inv = getAvailableInventory();
+    const items = DECORATIONS.map(d => {
+        const count = inv[d.emoji] || 0;
+        const disabled = count <= 0;
+        return `
+            <div class="palette-item${disabled ? ' disabled' : ''}"
+                ${disabled} ? '' : `onclick="placeFromInventory('${d.emoji}')"`}>
+              <span class="palette-emoji">${d.emoji}</span>
+              <span class="palette-cost ${count > 0 ? 'have' : ''}">${count > 0 ?  '×' + count : '—'}</span>
+            </div>
+        `; 
+    }).join('');
+    return `
+    <div class="panel-label">📦 Your Inventory - click to place (free, you own these)</div>
+    <div class="palette">${items}</div>
+    `;
+}
+
+function makeDraggable(node, index, canvas) {
+    let startX, startY, startPx, origPy, moved = false;
+    const pt = (e) => e.touches?.[0] ? { x: e.touches[0].clientX, y: e.touches[0].clienrY } : { x: e.clientX, y: e.clientY };
+    const onDown = (e) => {
+        e.preventDefault();
+        moved = false;
+        const p = pt(e);
+        startX = p.x; startY = p.y;
+        origPx = view.decoBuffer[index].px;
+        origPy = view.decoBuffer[index].py;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchend', onUp);
+    };
+    const onMove = (e) => {
+        
+    }
+}
+
+
+
+
+
 
 
 </script>
