@@ -834,15 +834,53 @@ function switchAuthMode(modal, mode) {
     </div>
     `;
 
-    if (mode === 'sigin') {
+    if (mode === 'signin') {
         title.textContent = 'Sign in';
         fields.innerHTML = `
         <input id="auth-email" type="email" placeholder="Email" autocomplete="email">
         ${pwField('auth-password', 'Password', 'current-password')}
         `;
-        
+        goBtn.textContent = 'Sign in';
+        goBtn.onclick = () => doAuth(modal, 'signin');
+    } else if (mode === 'signup') {
+        title.textContent = 'Create account';
+        fields.innerHTML = `
+        <input id="auth-email" type="email" placeholder="Email (real one - for password recovery)" autocomplete="email">
+        <input id="auth-username" type="text" placeholder="Username (3-20 letters/numbers)" maxlenght ="20">
+        ${pwField('auth-password', 'Password', 'current_password')}
+        <input id="auth-secret" type="text" placeholder="Secret answer (only you should know)">
+        <p class="help-text">⚠️ Remember your secret - you'll need it if you forget your password. Don't share it.</p>
+        `;
+        goBtn.textContent = 'Sign in';
+        goBtn.onclick = () => doAuth(modal, 'signin');
+    } else {
+        title.textContent = 'Reset password';
+        fields.innerHTML = `
+            <input id="auth-email" type="email" placeholder="Email">
+            <input id="auth-secret" type="text" placeholder="Your secret answer">
+            ${pwField('auth-password', 'New password (min 6 chars)', 'new-password')}
+        `;
+        goBtn.textContent = 'Reset password';
+        goBtn.onclick = () => doAuth(modal, 'forgot');
+    } 
+    setTimeout(() => modal.querySelector('#auth-email')?.focus(), 50);
+    modal.querySelectorAll('input').forEach(i => {
+        i.onkeypress = (e) => { if (e.key === 'Enter') goBtn.click(); };
+    });
+}
+
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
     }
 }
+
 
 
 
