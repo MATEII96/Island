@@ -778,9 +778,47 @@ function makeDraggable(node, index, canvas) {
         document.addEventListener('touchend', onUp);
     };
     const onMove = (e) => {
-        
-    }
+        e.preventDefault();
+        const p = pt(e);
+        const r = canvas.getBoundingClientRect();
+        const dx = (p.x - startX) / r.width;
+        const dy = (p.y - startY) / r.height;
+        if (Math.abs(dx) > 0.005 || Math.abs(dy) > 0.005) moved = true;
+        view.decoBuffer[index].px = Math.max(0, Math.min(1, origPx + dx));
+        view.decoBuffer[index].py = Math.max(0, Math.min(1, origPy + dy));
+        node.style.left = (view.decoBuffer[index].px * 100) + '%';
+        node.style.top = (view.decoBuffer[index].py * 100) + '%';
+    };
+    node.addEventListener('mousedown', onDown);
+    node.addEventListener('touchstart', onDown, { passive: false });
 }
+
+function showAuth(mode) {
+    mode = mode || 'signin';
+    const modal = document.crateElement('div');
+    modal.className = 'modal-bg';
+    modal.innerHTML = `
+        <div class="modal">
+            <h2 id="auth-title"></h2>
+            <div class="tabs">
+                <button class="tab" data-mode="signin">Sign in</button>
+                <button class="tab" data-mode="signup">Sign up</button>
+                <button class="tab" data-mode="forgot">Forgot</button>
+            </div>
+            <div id="auth-fields"></div>
+            <div id="auth-error" class="error-text" style="display:none"></div>
+            <button class="btn primary big" id="auth-go"></button>
+        </div>
+        `;
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
+
+        modal.querySelectorAll('.tab').forEach(t => {
+            t.onclick = () => switchAuthMode(modal, t.dataset.mode);
+        });
+        switchAuthMode(modal, mode);
+}
+
 
 
 
