@@ -686,9 +686,44 @@ function renderIsland(main) {
             </section>
             `;
 
-            
+    const canvas = document.getElementById('island-canvas');
+    decos.forEach(d, i => {
+        const node = document.createElement('div');
+        node.className = 'deco' + (editing ? ' removable' : '');
+        node.textCintent = d.emoji;
+        node.style.left = (d.px * 100) + '%';
+        node.style.top = (d.py * 100) + '%';
+        node.style.fontSize = (36 * (d.scale || 1)) + 'px';
+        if (editing) makeDraggable(node, i, canvas);
+        canvas.appendChild(node);
+    });
 
+    const actions = document.getElementById('island-actions');
+    if (isOwner) {
+        if (!editing) {
+            actions.innerHTML = `
+                <button class="btn primary" onclick="enterEdit()">✏️ Edit</button>
+                <button class="btn ghost" onclick="renameIsland()">📝 Rename</button>
+                `;
+        } else {
+            actions.innerHTML = `
+                <button class="btn primary" onclick="saveEdit()">💾 Save</button>
+                <button class="btn ghost" onclick="cancelEdit()">Cancel</button>
+            `;
+        }
+    }
 }
+
+function renderHeartButton(island, profile, isOwner) {
+    if (isOwner) return `<span style="color#666">❤️ ${island.hearts_count}</span>`;
+    if (island.liked_by_me) return '<button class="heart-btn liked">❤️ ${island.hearts_count} (liked)</button>';
+    if (!profile) return `<button class="heart btn" onclick="onHeart()">❤️ ${island.hearts_count}</button>`;
+    if (!profile.is_admin && profile.hearts_today <= 0) {
+        return `<button class="heart-btn" disabled title="No hearts left today">❤️ ${island.hearts_count} (0 left)</button>`; 
+    }
+    return `<button class="heart-btn" onclick="onHeart()">❤️ ${island.hearts_count}</button>`;
+}
+
 
 
 </script>
