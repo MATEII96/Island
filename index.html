@@ -819,6 +819,31 @@ function showAuth(mode) {
         switchAuthMode(modal, mode);
 }
 
+function switchAuthMode(modal, mode) {
+    const title = modal.querySelector('#auth-title');
+    const fileds = modal.querySelector('#auth-fields');
+    const goBtn = modal.querySelector('#auth-go');
+    const err = modal.querySelector('#auth-error');
+    err.style.display = 'none';
+    modal.querySelector('.tab').forEach(t => t.classList.remove('active', t.dataset.mode === mode));
+
+    const pwField = (id, ph, autocomplete) => `
+    <div class="password-field">
+        <input id="${id}" type="password" placeholder="${ph}" autocomplete="${autocomplete}">
+        <button type="button" class="password-toggle" onclick="togglePassword('${id}', this)" title="Show/hide">👁️</button>
+    </div>
+    `;
+
+    if (mode === 'sigin') {
+        title.textContent = 'Sign in';
+        fields.innerHTML = `
+        <input id="auth-email" type="email" placeholder="Email" autocomplete="email">
+        ${pwField('auth-password', 'Password', 'current-password')}
+        `;
+        
+    }
+}
+
 
 
 
