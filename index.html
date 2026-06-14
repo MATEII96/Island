@@ -635,8 +635,59 @@ function renderOcean(main) {
     <div id="ocean-grid"></div>
     <div class= "hint">💡 Click empty slot = claim. Click island = visit. Hover for details.</div>
     `;
+    const grid = document.getElementById('ocean-grid');
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            const island = occ.get( x + ',' + y);
+            const zone = getZone(x, y);
+            const cell = document.createElement('div');
+            cell.className = 'cell zone-' + zone;
+            if (island) {
+                cell.classList.add('owned');
+                if (myIsland &&  island.id === myIsland.id) cell.classList.add('mine');
+            }
+            const label = island
+                ? `🏝️ ${island.name} - @${island.owner_username}  ❤️${island.hearts_count}`
+                : `${zone.toUpperCase()} zone (${x}, ${y}) - ${getIslandCost(x, y)} coins to claim`;
+            cell.addEventListener('click', () => onCellClick(x, y, island));
+            cell.addEventListener('mouseenter', (e) => showTip(e, label));
+            cell.addEventListener('mouseleave', hideTip);
+            cell.addEventListener('mousemove', moveTip);
+            grid.appendChild(cell);
+        }
+    }
+}
 
-    
+function renderIsland(main) {
+    const island = Store.getIsland(view.islandId);
+    if (!island) { goOcean(); return; }
+    const profile = Store.getProfile();
+    const isOwner = !!island.is_mine;
+    const editing = view.editing;
+    const decos = editing ? view.decoBuffer : island.decorations;
+
+    main.innerHTML = `
+        <section id="screen-island">
+            <div id="island-meta">
+                <button class="btn ghost" onclick="goOcean()">← Ocean</button>
+                <span id="island-name">${escapeHtml(island.name)}</span>
+                <span style="color:#666">${isOwner ? '(your island)' : 'by @' + escapeHtml(island.owner_username)}</span>
+                ${renderHeartButton(island, profile, isOwner)}
+            </div>
+            <div id="island canvasr" class="${editing ? 'editing' : ''}"></div>
+            ${editing ? renderInventoryPanel() : ''}
+            ${editing ? renderShopPanel() : ''}
+            <div id="island-actions"></div>
+            <div class="hint">${
+                editing ? '✏️ Click inventory item = place. Click shop item = buy. Drag = move. Click placed item = back to inventory.' :
+                isOwner ? '👋 Your island. Press "Edit" to decorate. Hearts from others = coins for you!' :
+                '💝 Give a heart if you love it - owner gets a coin per heart.'
+            }</div>
+            </section>
+            `;
+
+            
+
 }
 
 
