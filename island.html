@@ -106,9 +106,102 @@ function makeDraggable(node, index) {
         node.style.left = (decorations[index].px * 100) + '%';
         node.style.top = (decorations[index].py * 100) + '%';
     }
+    function endDrag(e) {
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListner('touchmove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchend', endDrag);
+        if (!moved) {
+            decorations.splice(index, 1);
+            renderDecorations();
+        }
+    }
+    function getPoint(e) {
+        if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        return { x: e.clienX, y: e.clientY };
+    }
 }
 
+function renderActions() {
+    const weap = document.getElementById('island-actions');
+    wrap.innerHTML = '';
+    if (!isOwner) return;
 
+    if (!editing) {
+        wrap.appendChild(el('button', { class: 'btn primary', onClick: enterEdit}, '✏️ Editează'));
+        wrap.appendChild(el('button', { class: 'btn ghost', onClick:renameIsland}, '📝 Redenumește'));
+    } else {
+        wrap.appendChild(el('button', { class: 'btn primary', onClick: saveEdit }, '💾 Salvează'));
+        wrap.appendChild(el('button', { class: 'btn ghost', onClick: cancelEdit }, 'Anulează'));
+    }
+    document.getElementById('palette').style.display = editing ? 'flex' : 'none';
+    if (editing) renderPalette();
+}
+
+function renderPalette() {
+    const p = document.getElementById('palette');
+    p.innerHTML = '';
+    for (const emoji of PALETTE) {
+        p.appendChild(el('button', {
+            onClick: () => addDecoration(emoji)
+        }, emoji));
+    }
+}
+
+function addDecoration(emoji) {
+    decorations.push({ emoji, px: 0.5, py: 0.5, scale: 1 });
+    renderDecorations();
+}
+
+function enterEdit() {
+    editing = true;
+    render();
+}
+
+function cancelEdit() {
+    editing = false;
+    decorations = [...island.decorations];
+    render();
+}
+
+async function saveEdit() {
+    try {
+        await Store.saveDecorations(island.id, decorations);
+        island.decorations = [...decorations];
+        editing = false;
+        render();
+    } catch (e) { alert(e.message); }
+}
+
+async function renameIsland() {
+    const name = prompt('Nume nou pentru insulă:', island.name);
+    if (!name || name === island.name) return;
+    try {
+        await Store.setIslandName(island.id, name);
+        island.name = name.slice(0, 40);
+        render();
+    } catch (e) { alert(e.message); }
+}
+
+async function onHeart() {
+    if (!profile) { window.IslaApp.showLoginModal(); return; }
+    try {
+        const liked = await Store.toggleHeart(island.id);
+        island.liked_by_me = liked;
+        island.hearts_count += liked ? 1: -1;
+        render();
+    } catch (e) { alert(e.message); }
+}
+
+function renderHint() {
+    const h = document.getElementById('island-hint');
+    if (editing) h.textContent = '✏️ Click pe paletă ca să adaugi. Trage cu mouse-ul ca să muți. Click pe decorațiune ca să o ștergi.';
+    else if (isOwner) h.textContent = '👋 Asta e insula ta. Apasă „Editează" ca să o decorezi.';
+    else h.textContent = '💝 Dă o inimă dacă îți place. Înapoi la ocean ca să găsești altele.';
+}
+
+init();
 </script>
 
 </body>
