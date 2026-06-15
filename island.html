@@ -28,8 +28,85 @@
 
 <script src="app.js"></script>
 <script>
+const { Store, PALETTE, renderHeader, el} = window.IslaApp;
 
+const params = new URLSearchParams(location.search);
+const islandId = params.get('id');
 
+let profile = null;
+let island = null;
+let isOwner = false;
+let editing = false;
+let decorations = [];
+
+async function init() {
+    if (!islandId) { location.href = 'index.html'; return; }
+    profile = await Store.getProfile();
+    await renderHeader();
+    island = await Store.getIsland(islandId);
+    if (!island) { document.getElementById('island-name').textContent = 'Insulă inexistentă'; return; }
+    isOwner = profile && profile.id === island.owner_id;
+    decorations = [...island.decorations];
+    render();
+}
+
+function render() {
+    document.getElementById('island-name').textContent = island.name;
+    document.getElementById('island-owner').textContent = isOwner ? '(insula ta)' : `de @${island.owner_username}`;
+    document.getElementById('heart-count').textContent = island.hearts_count;
+    const heartBtn = document.getElementById('heart-btn');
+    heartBtn.classList.toggle('liked', island.liked_by_me);
+    heartBtn.onclick = onHeart;
+    renderDecorations();
+    renderActions();
+    renderHint();
+}
+
+function renderDecorations() {
+    const canvas = document.getElementById('island-canvas');
+    canvas.innerHTML = '';
+    canvas.classList.toggle('editing', editing);
+    for (let i = 0; i < decorations.length; i++) {
+        const d = decorations[i];
+        const node = el('div', { class: 'deco' + (editing ? ' removable' : '') }, d.emoji);
+        node.style.left = (d.px * 100) + '%';
+        node.style.top = (d.py * 100) + '%';
+        if (editing) makeDraggable(node, i);
+        canvas.appendChild(node);
+    }
+}
+
+function makeDraggable(node, index) {
+    let startX, startY, origPx, origPy, moved = false;
+    const canvas = document.getElementById('island-canvas');
+    node.addEvent.Listener('mousedown', startDrag);
+    node.addEventListener('touchstart', startDrag, { passive: false });
+
+    function startDrag(e) {
+        e.preventDefault();
+        moved = false;
+        const p = getPoint(e);
+        startX = p.x; startY = p.y;
+        origPx = decorations[index].px;
+        origPy = decorations[index].py;
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+    }
+    function drag(e) {
+        e.preventDefault();
+        const p = getPoint(e);
+        const r = canvas.getBoundingClientReact();
+        const dx = (p.x - startX) / r.width;
+        const dy = (p.y - startY) / r.height;
+        if (Math.abs(dx) > 0.005 || Math.abs(dy) > 0.005) moved =true;
+        decorations[index].px = Math.max(0, Math.min(1, origPx + dx));
+        decorations[index].py = Math.max(0, Math.min(1, origPy + dy));
+        node.style.left = (decorations[index].px * 100) + '%';
+        node.style.top = (decorations[index].py * 100) + '%';
+    }
+}
 
 
 </script>
