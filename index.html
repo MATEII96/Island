@@ -947,7 +947,62 @@ function showClaimModal(x, y) {
             </div>
         </div>
         `;
-        
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
+        document.getElementById('claim-name').focus();
+        document.getElementById('claim-go').onClick = () => {
+            const name = document.getElementById('claim-name').value.trim() || 'My Island';
+            try {
+                const isl = Store.claimIsland(x, y, name);
+                modal.remove();
+                view.screen = 'island'; view.islandId = isl.id; view.editing = true; view.decoBuffer = [];
+                render();
+            } catch (e) { alert(e.message); }
+        };
+}
+
+function showShop() {
+    const profile = Store.getProfile();
+    if (!profile) { showAuth('signin'); return; }
+    const cards = PACKAGES.map(p => `
+        <div classs="pkg ${p.badge ? 'featured' : ''}" onclick="onBuyPackage('${p.id}')">
+            ${p.badge ? `<div class="pkg-badge">${p.badge}</div>` : ''}
+            <div class="pkg-coins">${p.coins} 🪙</div>
+            <div class="pkg-price">$${p.price}</div>
+            ${profile.is_admin ? '<div class="admin-note">Free for admin</div>' : ''}
+        </div>
+        `).join('');
+        const stripeReady = STRIPE_LINKS.starter || STRIPE_LINKS.best || STRIPE_LINKS.treasure;
+        const modal = document.createElement('div');
+        modal.className = 'modal-bg';
+        modal.innerHTML = `
+            <div class="modal" style="min-width:340px">
+                <h2>Get more coins</h2>
+                <p>You have  <b>${profile.coins} 🪙</b>. Spend on islands and decorations.</p>
+                <div class="pkg-grid">${cards}</div>
+                <p style="font-size:12px;color:#888;margin-top:8px">${stripeReady ? 'Secure payment via Stripe.' : 'Demo mode - set STRIPE_LINKS in code for real payments.'}</p?
+                <button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Close</button>
+            </div>
+        `;
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
+}
+
+function onBuyPackage(id) {
+    const profile = Store.getProfile();
+    if (!profile) { showAuth('signin'); return; }
+    const pkg = PACKAGES.find(p => p.id === id);
+    if (!pkg) return;
+
+    if (profile.is_admin) {
+        Store.buyPackage(id);
+        document.querySelector('.modal-bg')?.remove();
+        alert(`+${pkg.coins} coins (Free - Admin mode)`);
+        render();
+        return;
+    }
+
+    
 }
 
 
