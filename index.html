@@ -1062,9 +1062,47 @@ function renameIsland() {
     try { Store.setIslandName(view.islandId, name); render(); }
     catch (e) { alert(e.message); }
 }
+function buyDecoration(emoji) {
+    try {
+        Store.buyDecoration(emoji);
+        render()
+    } catch (e) {
+        if (e.message.includes('Need')) {
+            if (confirm(e.message + ' Open shop?')) showShop();
+        } else { alert(e.message); }
+    }
+}
+function placeFromInventory(emoji) {
+    const inv = getAvailableInventory();
+    if(!inv[emoji] || inv[emoji] <= 0) return;
+    view.decoBuffer.push({ emoji, px: 0.5, py: 0.5, scale: 1 });
+    render();
+}
+function onHeart() {
+    if (!Store.getProfile()) { showAuth('signin'); return; }
+    try {
+        Store.giveHeart(view.islandId);
+        render();
+    } catch (e) { alert(e.message); }
+}
 
+let tipEl = null;
+function showTip(e, text) {
+    hideTip();
+    tipEl = document.createElement('div');
+    tipEl.className = 'tooltip';
+    tipEl.textContent = text;
+    document.body.appendChild(tipEl);
+    moveTip(e);
+}
+function moveTip(e) { if (tipEl) { tipEl.style.left = (e.clientX + 12) + 'px'; tipEl.style.top = (e.clientY + 12) + 'px'; } }
+function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
 
+document.getElementById('logo').addEventListener('click', goOcean);
 
+checkStripeReturn();
+try { render(); }
+catch (e) { showError(e); }
 </script>
 
 </body>
