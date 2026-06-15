@@ -881,7 +881,74 @@ function togglePassword(inputId, btn) {
     }
 }
 
+async function doAuth(modal, mode) {
+    const err = modal.querySelector('#auth-error');
+    err.style.display = 'none';
+    const get = (id) => modal.querySelector('#' + id)?.value || '';
+    const email = get('auth-email').trim();
+    const password = get('auth-password');
+    const secret = get('auth-secret');
+    const username = get('auth-username').trim();
+    try {
+        if (mode === 'signin') {
+            await Store.signIn(email, password);
+            modal.remove();
+            render();
+        } else if(mode === 'signup') {
+            await Store.signUp(email, username, password, secret);
+            modal.remove();
+            render();
+            alert('✅ Account created! Welcome @' + username);
+        } else {
+            await Store.resetPassword(email, secret, password);
+            err.style.color = 'green';
+            err.style.display = 'block';
+            err.textContent = '✅ Password reset! Switch to Sign in';
+            setTimeout(() => switchAuthMode(modal, 'signin'), 1200);
+        }
+    } catch (e) {
+        err.style.color = '';
+        err.style.display = 'block';
+        err.textContent = e.message;
+    }
+}
 
+function onCellClick(x, y, island) {
+    if (island) { view.screen = 'island'; view.islandId = island.id; view.editing = false; render(); return; }
+    const profile = Store.getProfile();
+    if (!profile) { showAuth('signin'); return; }
+    if (Store.getMyIsland()) { alert('You already have an island (1 per player for now).'); return; }
+    const cost = getIslandCost(x, y);
+    if (!profile.is_admin && profile.coins < cost) {
+        if (confirm(`This ${getZone(x, y).toUpperCase()} slot costs ${cost} 🪙 and you have ${profile.coins}. Open the shop?`)) {
+            showShop();
+        }
+        return;
+    }
+    showClaimModal(x, y);
+}
+
+function showClaimModal(x, y) {
+    const profile = Store.getProfile();
+    const cost = getIslandCost(x, y);
+    const zone = getZone(x, y).toUpperCase();
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.innerHTML = `
+    <div class="modal">
+        <div class="modal">
+            <h2>Claim ${zone} slot (${x}, ${y})</h2>
+            <p>Cost: <b>${cost} 🪙</b>. You have <b>${profile.coins} 🪙</b>.${profile.is_admin ? '<span class="admin-note">Admin: free</span>' : ''}</p>
+            ${profile.coins < cost && !profile.is_admin ? `<p style="color:#a00">Not enough coins. <a href="#" onclick="document.querySelector('.modal-bg').remove();showShop(),return false;">Buy more →</a></p>` : ''}
+            <input id="claim-name" type="text" placeholder="Island name (must be unique)" maxLenght="40">
+            <div style="display:flex;gap:10px;margin-top:6px">
+                <button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Cancel</button>
+                <button class="btn primary big" id="claim-go" ${profile.coins < cost &&  !profile.is_admin ? 'disabled' : ''}>Claim</button>
+            </div>
+        </div>
+        `;
+        
+}
 
 
 
