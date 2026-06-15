@@ -1002,12 +1002,66 @@ function onBuyPackage(id) {
         return;
     }
 
-    
+    const link = STRIPE_LINKS[id];
+    if (link) {
+        sessionStorage.setItem('pending_purchase', JSON.stringify({ pkgId: id, ts: Date.now() }));
+        window.location.href = link;
+        return;
+    }
+
+    Store.buyPackage(id);
+    document.querySelector('.modal-bg')?.remove();
+    alert(`+${pkg.coins} coins (Demo mode - would charge $${pkg.price})`);
+    render();
 }
 
+function checkStripeReturn() {
+    const params = new URLSearchParams(location.search);
+    const paid = params.get('paid');
+    if (!paid) return;
+    const pendingRaw = sessionStorage.getItem('pending_purchase');
+    if (pendingRaw) {
+        try {
+            const pending = JSON.parse(pendingRaw);
+            if (pending && pending.pkgId === paid) {
+                const pkg = Store.buyPackage(paid);
+                sessionStorage.removeItem('pending_purchase');
+                setTimeout(() => alert(`✅ Payment succesful! +${pkg.coins} coins added.`), 100);
+            }
+        } catch (e) { }
+    }
+    history.replaceState({}, '', location.pathname);
+}
 
+function onSignOut() {
+    Store.signOut();
+    view = { screen: 'ocean', islandId: null, editing: false, decoBuffer: [] };
+    render();
+}
 
+function goOcean() { view.screen = 'ocean'; view.editing = false; render(); }
 
+function enterEdit() {
+    const island = Store.getIsland(view.islandId);
+    view.editing = true;
+    view.decoBuffer = island.decorations.map(d => ({ ...d }));
+    render();
+}
+function cancelEdit() { view.editing = false; view.decoBuffer = []; render(); }
+function saveEdit() {
+    try {
+        Store.saveDecorations(view.islandId, view.decoBuffer);
+        view.editing = false;
+        render();
+    } catch (e) { alert(e.message); }
+}
+function renameIsland() {
+    const island = Store.getIsland(view.islandId);
+    const name = prompt('New name:', island.name);
+    if (!name || name === island.name) return;
+    try { Store.setIslandName(view.islandId, name); render(); }
+    catch (e) { alert(e.message); }
+}
 
 
 
