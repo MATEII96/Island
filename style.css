@@ -183,3 +183,108 @@ body {
     margin: 0 auto;
 }
 
+#island-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+}
+#island-meta {
+    background: rgba(255,255,255,0.85);
+    padding: 14px 22px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+#island-name { font-size: 22px; font-weight: 700; }
+#island-name[contenteditable="true"] {
+    outline: 2px dashed var(--mint);
+    outline-offset: 4px;
+    border-radius: 5px;
+}
+.heart-btn {
+    background: white;
+    border: 2px solid var(--pink);
+    color: var(--pink);
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    font-weight: 600;
+}
+.heart-btn.liked { background: var(--pink); color: white; }
+
+#island-canvas {
+    width: min(700px, 92vw);
+    aspect-ratio: 1;
+    background:
+        radial-gradient(circle at center, var(--sand-1) 0%, var(--sand-2) 38%, transparent 42%),
+        radial-gradient(circle at center, transparent 42%, var(--ocean-3) 44%, var(--ocean-1) 100%);
+    border-radius: 50%;
+    position: relative;
+    overflow: visible;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+}
+#island-canvas.editing {
+    outline: 3px dashed white;
+    outline-offset: 8px;
+}
+
+.deco {
+    position: absolute;
+    font-size: 36px;
+    cursor: grab;
+    user-select: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+}
+.deco:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.15); }
+.deco.removable:hover { filter: drop-shadow(0 0 8px red); }
+
+#palette {
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.85);
+    padding: 12px 16px;
+    border-radius: 999px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 92vw;
+}
+#palette button {
+    font-size: 28px;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    width: 50px;
+    height:  50px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+#palette button:hover { transform: scale(1.15); border-color: var(--mint); }
+
+#island-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.hint {
+    color: white;
+    background: rgba(0,0,0,0.3);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+@keyframes drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100px); }
+}
