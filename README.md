@@ -1,4 +1,10 @@
+#Isla.fun
+
+Demo:https://mateii96.github.io/Island/
+
 Hello!
+
+
 
 One day I thought about how the 1 million pixels page owner made lots of money so easily.
 I knew I had to try something similar.
@@ -14,3 +20,6 @@ I split the grid into 3 parts:
 - the center (most expensive part)
 
 The idea is to make people communicate differently and leave a fingerprint in the history of the internet if some people didn't have the opportunity to leave a fingerprint about 15 years ago.
+
+
+AI used for debugging.
