@@ -21,5 +21,11 @@ I split the grid into 3 parts:
 
 The idea is to make people communicate differently and leave a fingerprint in the history of the internet if some people didn't have the opportunity to leave a fingerprint about 15 years ago.
 
+Tutorial:
+Go to the demo link sign in and go to de coins section and choose a coins value(it is free even if you see $).Then buy an island where you want and start decorating it.
+
+Technical information:
+Build with HTML&CSS&Java Script&SQL
+
 
 AI used for debugging.
