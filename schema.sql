@@ -33,5 +33,30 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-    
+    insert into profiles (id, username)
+    values (
+        new.id,
+        coalesce(new.raw_user_meta_data->>'username', 'user_' || substr(new.id::text, 1, 8))
+    );
+    return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+create or replace function spend_coins(amount integer)
+returns void language plpgsql security definer as $$
+declare
+    uid uuid := auth.uid();
+    cur integer;
+begin
+    if uid is null then raise exception 'not authenticated'; end if;
+    select coins into cur from profiles where id = uid for update;
+    if cur < amount then raise exception 'insufficient coins'; end if;
+    update profiles set coins = coins - amount where id = uid;
+end; $$;
+
+
 
