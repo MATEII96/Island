@@ -58,5 +58,30 @@ begin
     update profiles set coins = coins - amount where id = uid;
 end; $$;
 
+create or replace function add_coins(amount integer)
+returns void language plpgsql security definer as $$
+begin
+    if auth.uid() is null then raise exception 'not authenticated'; end if;
+    update profiles set coins = coins + amount where id = auth.uid();
+end; $$;
+
+create or replace function increment_hearts(iid uuid)
+returns void laguage sql security definer as $$
+    update islands set hearts_count = hearts_count + 1 where id = iid;
+$$;
+
+create or replace function decrement_hearts(iid uuid)
+returns void language sql security definer as $$
+    update islands set hearts_count = greatest(0, hearts_count - 1) where id = iid;
+$$;
+
+alter table profiles enable row level security;
+alter table islands enable row level security;
+alter table decorations enable row level security;
+alter table hearts enable row level security;
+
+create policy "profiles_read_all" on islands for select using (true);
+create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
+
 
 
