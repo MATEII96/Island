@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html land="en">
+<html lang="en">
 <head>
-<meta charset = "UTF-8">
-<meta name="viewport" content="widht=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>isla.fun - your tiny ocean island</title>
 <style>
 :root {
     --ocean-1: #5390d9; --ocean-2: #4ea8de; --ocean-3: #80c8e8;
     --foam: #e0fbfc; --sand-1: #fec89a; --sand-2: #f4d35e;
     --pink: #ff8fab; --mint: #06d6a0; --ink: #1d3557; --paper: #fffaf0;
-    --golf: #ffd166;
+    --gold: #ffd166;
     --shadow: 0 4px 14px rgba(29,53,87,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -78,16 +78,16 @@ header{
     border-radius: 3px; cursor: pointer; position: relative;
     transition: transform 0.1s, box-shadow 0.1s;
 }
-.cell.zone-mid { background: liner-gradient(135deg, rgba(255,200,154,0.15), rgba(255,140,100,0.25)); }
+.cell.zone-mid { background: linear-gradient(135deg, rgba(255,200,154,0.15), rgba(255,140,100,0.25)); }
 .cell.zone-center { background: linear-gradient(135deg, rgba(255,209,102,0.25), rgba(255,143,171,0.35)); }
-.cell:hover { transform: scale(1.6); z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0,.2); }
-.cell.owned { background: radical-gradient(circle, var(--sand-2) 30%, var(--sand-1) 70%); }
+.cell:hover { transform: scale(1.6); z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.cell.owned { background: radial-gradient(circle, var(--sand-2) 30%, var(--sand-1) 70%); }
 .cell.owned::after {
   content: '🌴'; position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center; font-size: 0.7em;
 }
 .cell.mine {
-    background: radical-gradient(circle, var(--mint) 30%, var(--sand-1) 70%);
+    background: radial-gradient(circle, var(--mint) 30%, var(--sand-1) 70%);
     box-shadow: 0 0 0 2px var(--ink);
 }
 .tooltip {
@@ -101,7 +101,7 @@ header{
     width: fit-content; display: block;
 }
 .modal-bg {
-    position: fixed; insert: 0; background: rgba(29,53,87,0.4);
+    position: fixed; inset: 0; background: rgba(29,53,87,0.4);
     display: flex; align-items: center; justify-content: center;
     z-index: 100; backdrop-filter: blur(4px);
 }
@@ -122,7 +122,7 @@ header{
 .password-field { position: relative; }
 .password-field input { padding-right: 46px; }
 .password-toggle {
-    position: absolute; right: 6pd; top: 50%; transform: translateY(-50%);
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
     background: transparent; border: none; cursor: pointer;
     font-size: 18px; padding: 6px 8px; border-radius: 8px;
     color: #888; line-height: 1;
@@ -163,9 +163,9 @@ header{
 }
 #island-canvas.editing { outline: 3px dashed white; outline-offset: 8px; }
 .deco {
-    position: absolute; font-size: 36pc; cursor: grab;
+    position: absolute; font-size: 36px; cursor: grab;
     user-select: none; transform: translate(-50%, -50%);
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0,.2));
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.2));
 }
 .deco:active { cursor: grabbing; }
 .deco.removable:hover{ filter: drop-shadow( 0 0 8px red); }
@@ -174,7 +174,17 @@ header{
     border-radius: 999px; font-size: 12px; font-weight: 600;
     margin: 8px auto 4px; color: var(--ink); display: inline-block;
 }
-.palette-item:hover:not(.disabled) { background: rgba(6,214,160,0.2); }
+.palette {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    background: rgba(255,255,255,0.85); padding: 12px 16px;
+    border-radius: 18px; max-width: 92vw; margin: 0 auto 8px;
+}
+.palette-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: white; border: 2px solid transparent; border-radius: 12px;
+    padding: 8px 10px; cursor: pointer; transition: background 0.1s, transform 0.1s;
+}
+.palette-item:hover:not(.disabled) { background: rgba(6,214,160,0.2); transform: scale(1.05); }
 .palette-item.disabled { opacity: 0.35; cursor: not-allowed; }
 .palette-emoji { font-size: 26px; }
 .palette-cost { font-size: 11px; font-weight: 600; color: #777; }
@@ -209,7 +219,7 @@ header{
 <body>
 
 <header>
-    <div class="logo" id="logo">🏝️ isla.fun <span class="demo-badge">DEMO</span>/div>
+    <div class="logo" id="logo">🏝️ isla.fun <span class="demo-badge">DEMO</span></div>
     <div class="header-right" id="header-right"></div>
 </header>
 
@@ -267,20 +277,20 @@ function getZone(x, y) {
     const c = (GRID_SIZE - 1) / 2;
     const dist = Math.max(Math.abs(x - c), Math.abs(y - c));
     if (dist < 5) return 'center';
-    if (dist < 10) return'mid';
-    else 'edge';
+    if (dist < 10) return 'mid';
+    return 'edge';
 }
 function getIslandCost(x, y) { return ZONE_PRICES[getZone(x, y)]; }
 function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp','<':'&lt','>':'&gt','"':'&quot;',"'":'&#39;'}[c]));
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 async function _sha256(text) {
     const data = new TextEncoder().encode(String(text));
-    const buf = await crypto.subtle.digest('SHA-256', data),
+    const buf = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
-async function hashEmail(email) {
+async function _hashEmail(email) {
     return _sha256(String(email).toLowerCase().trim());
 }
 async function _hashWithSalt(input, salt) {
@@ -297,7 +307,7 @@ function isValidEmail(email) {
 function isValidUsername(u) {
     return /^[a-zA-Z0-9_]{3,20}$/.test(String(u || '').trim());
 }
-async function _isAdminLogin(email, code) => {
+async function _isAdminLogin(email, code) {
     if (!EXPECTED_ADMIN_HASH || !email || !code) return false;
     const data = new TextEncoder().encode(String(email).toLowerCase() + ':' + String(code));
     const buf = await crypto.subtle.digest('SHA-256', data);
@@ -341,10 +351,10 @@ const Store = {
   async signUp(email, username, password, secret) {
     if (!isValidEmail(email)) throw new Error('Invalid email format');
     if (!isValidUsername(username)) throw new Error(`Username must be ${MIN_USERNAME}-${MAX_USERNAME} letters/numbers/underscores`);
-    if (String(password).lenght < MIN_PASSWORD) throw new Error(`Password must be at least ${MIN_PASSWORD} characters`);
-    if (String(secret).lenght < MIN_SECRET) throw new Error(`Secret answer must be at least ${MIN_SECRET} characters`);
-    
-    const id = await_hashEmail(email);
+    if (String(password).length < MIN_PASSWORD) throw new Error(`Password must be at least ${MIN_PASSWORD} characters`);
+    if (String(secret).length < MIN_SECRET) throw new Error(`Secret answer must be at least ${MIN_SECRET} characters`);
+
+    const id = await _hashEmail(email);
     const s = load();
     if (s.profiles[id]) throw new Error('An account with this email already exists. Sign in instead.');
 
@@ -392,14 +402,14 @@ const Store = {
 
   async resetPassword(email, secret, newPassword) {
     if (!isValidEmail(email)) throw new Error('Invalid email format');
-    if (String(newPassword).lenght < MIN_PASSWORD) throw new Error(`New password must be at least ${MIN_PASSWORD} characters`);
+    if (String(newPassword).length < MIN_PASSWORD) throw new Error(`New password must be at least ${MIN_PASSWORD} characters`);
     const id = await _hashEmail(email);
     const s = load();
     const p = s.profiles[id];
     if (!p) throw new Error('Email or secret answer is wrong');
     const tryHash = await _hashWithSalt(String(secret).toLowerCase().trim(), p.secret_salt);
     if (tryHash !== p.secret_hash) throw new Error('Email or secret answer is wrong');
-    const newSalt = _genSalr();
+    const newSalt = _genSalt();
     p.password_salt = newSalt;
     p.password_hash = await _hashWithSalt(newPassword, newSalt);
     save(s);
@@ -411,7 +421,7 @@ const Store = {
     s.user = null;
     save(s);
     _sessionEmail = null;
-  };
+  },
 
   getProfile() {
     const s = load();
@@ -460,11 +470,11 @@ const Store = {
         is_mine: s.user && island.owner_id === s.user
     };
   },
-  buyDecorations(emoji) {
+  buyDecoration(emoji) {
     const cost = DECO_COST[emoji];
     if (!cost) throw new Error('Unknown decoration');
     const s = load();
-    if (!user) throw new Error('Sign in first');
+    if (!s.user) throw new Error('Sign in first');
     const p = s.profiles[s.user];
     if (!p.inventory) p.inventory = {};
     if (!p.is_admin) {
@@ -516,9 +526,9 @@ const Store = {
     island.hearts_count++;
     const owner = s.profiles[island.owner_id];
     if (owner) owner.coins += COIN_PER_HEART;
-    save(S);
+    save(s);
   },
-  setIslandNmae(islandId, name) {
+  setIslandName(islandId, name) {
     const s = load();
     const island = s.islands.find(i => i.id === islandId);
     if (!island || island.owner_id !== s.user) throw new Error('Not your island');
@@ -577,7 +587,7 @@ function renderHeader() {
     right.innerHTML = '';
     if (profile) {
         const adminTag = profile.is_admin ? '<span class="admin-badge">ADMIN</span>' : '';
-        const heartsLeft = profile.is_admin ? '∞' : prfofile.hearts_today;
+        const heartsLeft = profile.is_admin ? '∞' : profile.hearts_today;
         let adminToggle = '';
         if(profile.is_admin) {
             adminToggle = `<button class="btn ghost" onclick="onStepDown()" title="Step down from admin">🔓</button>`;
@@ -593,7 +603,7 @@ function renderHeader() {
             <button class="btn ghost" onclick="onSignOut()">Sign out</button>
             `;
     } else {
-        right.innerHTML = `<button class="btn primary" onclick"showAuth('signin')">Sign in</button`;
+        right.innerHTML = `<button class="btn primary" onclick="showAuth('signin')">Sign in</button>`;
     }
 }
 
@@ -626,7 +636,7 @@ function renderOcean(main) {
         <h1>🏝️ Build your tiny island</h1>
         <p>Claim a slot in the ocean and decorate it. Buy coins to start - every heart you get earns you more. Center is rare, edges are cheaper.</p>
     </section>
-    <div id="ocean-stats">🌊 ${islands.lenght} / ${GRID_SIZE * GRID_SIZE} islands claimed</div?
+    <div id="ocean-stats">🌊 ${islands.length} / ${GRID_SIZE * GRID_SIZE} islands claimed</div>
     <div class="zones-legend">
         <span class="zone-tag">⭐ Center: ${ZONE_PRICES.center} coins</span>
         <span class="zone-tag">🌅 Mid: ${ZONE_PRICES.mid} coins</span>
@@ -674,7 +684,7 @@ function renderIsland(main) {
                 <span style="color:#666">${isOwner ? '(your island)' : 'by @' + escapeHtml(island.owner_username)}</span>
                 ${renderHeartButton(island, profile, isOwner)}
             </div>
-            <div id="island canvasr" class="${editing ? 'editing' : ''}"></div>
+            <div id="island-canvas" class="${editing ? 'editing' : ''}"></div>
             ${editing ? renderInventoryPanel() : ''}
             ${editing ? renderShopPanel() : ''}
             <div id="island-actions"></div>
@@ -687,10 +697,10 @@ function renderIsland(main) {
             `;
 
     const canvas = document.getElementById('island-canvas');
-    decos.forEach(d, i => {
+    decos.forEach((d, i) => {
         const node = document.createElement('div');
         node.className = 'deco' + (editing ? ' removable' : '');
-        node.textCintent = d.emoji;
+        node.textContent = d.emoji;
         node.style.left = (d.px * 100) + '%';
         node.style.top = (d.py * 100) + '%';
         node.style.fontSize = (36 * (d.scale || 1)) + 'px';
@@ -715,9 +725,9 @@ function renderIsland(main) {
 }
 
 function renderHeartButton(island, profile, isOwner) {
-    if (isOwner) return `<span style="color#666">❤️ ${island.hearts_count}</span>`;
-    if (island.liked_by_me) return '<button class="heart-btn liked">❤️ ${island.hearts_count} (liked)</button>';
-    if (!profile) return `<button class="heart btn" onclick="onHeart()">❤️ ${island.hearts_count}</button>`;
+    if (isOwner) return `<span style="color:#666">❤️ ${island.hearts_count}</span>`;
+    if (island.liked_by_me) return `<button class="heart-btn liked">❤️ ${island.hearts_count} (liked)</button>`;
+    if (!profile) return `<button class="heart-btn" onclick="onHeart()">❤️ ${island.hearts_count}</button>`;
     if (!profile.is_admin && profile.hearts_today <= 0) {
         return `<button class="heart-btn" disabled title="No hearts left today">❤️ ${island.hearts_count} (0 left)</button>`; 
     }
@@ -750,11 +760,11 @@ function renderInventoryPanel() {
         const disabled = count <= 0;
         return `
             <div class="palette-item${disabled ? ' disabled' : ''}"
-                ${disabled} ? '' : `onclick="placeFromInventory('${d.emoji}')"`}>
+                ${disabled ? '' : `onclick="placeFromInventory('${d.emoji}')"`}>
               <span class="palette-emoji">${d.emoji}</span>
               <span class="palette-cost ${count > 0 ? 'have' : ''}">${count > 0 ?  '×' + count : '—'}</span>
             </div>
-        `; 
+        `;
     }).join('');
     return `
     <div class="panel-label">📦 Your Inventory - click to place (free, you own these)</div>
@@ -762,9 +772,29 @@ function renderInventoryPanel() {
     `;
 }
 
+function renderShopPanel() {
+    const profile = Store.getProfile();
+    const coins = profile ? profile.coins : 0;
+    const isAdmin = !!(profile && profile.is_admin);
+    const items = DECORATIONS.map(d => {
+        const affordable = isAdmin || coins >= d.cost;
+        return `
+            <div class="palette-item${affordable ? '' : ' disabled'}"
+                ${affordable ? `onclick="buyDecoration('${d.emoji}')"` : ''}>
+              <span class="palette-emoji">${d.emoji}</span>
+              <span class="palette-cost ${affordable ? 'have' : ''}">${d.cost} 🪙</span>
+            </div>
+        `;
+    }).join('');
+    return `
+    <div class="panel-label">🛒 Shop - buy decorations into your inventory</div>
+    <div class="palette">${items}</div>
+    `;
+}
+
 function makeDraggable(node, index, canvas) {
-    let startX, startY, startPx, origPy, moved = false;
-    const pt = (e) => e.touches?.[0] ? { x: e.touches[0].clientX, y: e.touches[0].clienrY } : { x: e.clientX, y: e.clientY };
+    let startX, startY, origPx, origPy, moved = false;
+    const pt = (e) => e.touches?.[0] ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
     const onDown = (e) => {
         e.preventDefault();
         moved = false;
@@ -795,7 +825,7 @@ function makeDraggable(node, index, canvas) {
 
 function showAuth(mode) {
     mode = mode || 'signin';
-    const modal = document.crateElement('div');
+    const modal = document.createElement('div');
     modal.className = 'modal-bg';
     modal.innerHTML = `
         <div class="modal">
@@ -821,11 +851,11 @@ function showAuth(mode) {
 
 function switchAuthMode(modal, mode) {
     const title = modal.querySelector('#auth-title');
-    const fileds = modal.querySelector('#auth-fields');
+    const fields = modal.querySelector('#auth-fields');
     const goBtn = modal.querySelector('#auth-go');
     const err = modal.querySelector('#auth-error');
     err.style.display = 'none';
-    modal.querySelector('.tab').forEach(t => t.classList.remove('active', t.dataset.mode === mode));
+    modal.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
 
     const pwField = (id, ph, autocomplete) => `
     <div class="password-field">
@@ -846,13 +876,13 @@ function switchAuthMode(modal, mode) {
         title.textContent = 'Create account';
         fields.innerHTML = `
         <input id="auth-email" type="email" placeholder="Email (real one - for password recovery)" autocomplete="email">
-        <input id="auth-username" type="text" placeholder="Username (3-20 letters/numbers)" maxlenght ="20">
-        ${pwField('auth-password', 'Password', 'current_password')}
+        <input id="auth-username" type="text" placeholder="Username (3-20 letters/numbers)" maxlength="20">
+        ${pwField('auth-password', 'Password', 'new-password')}
         <input id="auth-secret" type="text" placeholder="Secret answer (only you should know)">
         <p class="help-text">⚠️ Remember your secret - you'll need it if you forget your password. Don't share it.</p>
         `;
-        goBtn.textContent = 'Sign in';
-        goBtn.onclick = () => doAuth(modal, 'signin');
+        goBtn.textContent = 'Create account';
+        goBtn.onclick = () => doAuth(modal, 'signup');
     } else {
         title.textContent = 'Reset password';
         fields.innerHTML = `
@@ -935,12 +965,11 @@ function showClaimModal(x, y) {
     const modal = document.createElement('div');
     modal.className = 'modal-bg';
     modal.innerHTML = `
-    <div class="modal">
         <div class="modal">
             <h2>Claim ${zone} slot (${x}, ${y})</h2>
             <p>Cost: <b>${cost} 🪙</b>. You have <b>${profile.coins} 🪙</b>.${profile.is_admin ? '<span class="admin-note">Admin: free</span>' : ''}</p>
-            ${profile.coins < cost && !profile.is_admin ? `<p style="color:#a00">Not enough coins. <a href="#" onclick="document.querySelector('.modal-bg').remove();showShop(),return false;">Buy more →</a></p>` : ''}
-            <input id="claim-name" type="text" placeholder="Island name (must be unique)" maxLenght="40">
+            ${profile.coins < cost && !profile.is_admin ? `<p style="color:#a00">Not enough coins. <a href="#" onclick="document.querySelector('.modal-bg').remove();showShop();return false;">Buy more →</a></p>` : ''}
+            <input id="claim-name" type="text" placeholder="Island name (must be unique)" maxlength="40">
             <div style="display:flex;gap:10px;margin-top:6px">
                 <button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Cancel</button>
                 <button class="btn primary big" id="claim-go" ${profile.coins < cost &&  !profile.is_admin ? 'disabled' : ''}>Claim</button>
@@ -950,7 +979,7 @@ function showClaimModal(x, y) {
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
         document.body.appendChild(modal);
         document.getElementById('claim-name').focus();
-        document.getElementById('claim-go').onClick = () => {
+        document.getElementById('claim-go').onclick = () => {
             const name = document.getElementById('claim-name').value.trim() || 'My Island';
             try {
                 const isl = Store.claimIsland(x, y, name);
@@ -965,7 +994,7 @@ function showShop() {
     const profile = Store.getProfile();
     if (!profile) { showAuth('signin'); return; }
     const cards = PACKAGES.map(p => `
-        <div classs="pkg ${p.badge ? 'featured' : ''}" onclick="onBuyPackage('${p.id}')">
+        <div class="pkg ${p.badge ? 'featured' : ''}" onclick="onBuyPackage('${p.id}')">
             ${p.badge ? `<div class="pkg-badge">${p.badge}</div>` : ''}
             <div class="pkg-coins">${p.coins} 🪙</div>
             <div class="pkg-price">$${p.price}</div>
@@ -980,7 +1009,7 @@ function showShop() {
                 <h2>Get more coins</h2>
                 <p>You have  <b>${profile.coins} 🪙</b>. Spend on islands and decorations.</p>
                 <div class="pkg-grid">${cards}</div>
-                <p style="font-size:12px;color:#888;margin-top:8px">${stripeReady ? 'Secure payment via Stripe.' : 'Demo mode - set STRIPE_LINKS in code for real payments.'}</p?
+                <p style="font-size:12px;color:#888;margin-top:8px">${stripeReady ? 'Secure payment via Stripe.' : 'Demo mode - set STRIPE_LINKS in code for real payments.'}</p>
                 <button class="btn ghost" onclick="this.closest('.modal-bg').remove()">Close</button>
             </div>
         `;

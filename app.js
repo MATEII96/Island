@@ -24,7 +24,7 @@ function localStore() {
       return{
         async signIn(email) {
             const s = load();
-            const id = 'u_' + email.replace(/\W)/g, '').slice(0, 8);
+            const id = 'u_' + email.replace(/\W/g, '').slice(0, 8);
             s.user = id;
             if (!s.profiles[id]) {
               s.profiles[id] = { id, username: email.split('@')[0], coins: STARTING_COINS };
@@ -73,7 +73,7 @@ function localStore() {
         },
         async getIsland(id) {
             const s = load();
-            const island = s.island.find(i => i.id === id);
+            const island = s.islands.find(i => i.id === id);
             if (!island) return null;
             return {
                 ...island,
@@ -133,7 +133,7 @@ function supabaseStore() {
         },
         async getOcean() {
             const { data } = await supabase.from('islands')
-              .select('*, profiles!islands_owner_id_fkey(username');
+              .select('*, profiles!islands_owner_id_fkey(username)');
             return (data || []).map(i => ({ ...i, owner_username: i.profiles?.username || 'anonim'}));
         },
         async getMyIsland() {
@@ -156,7 +156,7 @@ function supabaseStore() {
         async getIsland(id) {
             const { data: { user } } = await supabase.auth.getUser();
             const { data : island } = await supabase.from('islands')
-              .select('*, profiles!islands_owner_id_fkey(username').eq('id', id).single();
+              .select('*, profiles!islands_owner_id_fkey(username)').eq('id', id).single();
             if (!island) return null;
             const { data: decorations } = await supabase.from('decorations').select('*').eq('island_id', id);
             let liked = false;
@@ -174,7 +174,7 @@ function supabaseStore() {
         },
         async saveDecorations(islandId, decorations) {
             await supabase.from('decorations').delete().eq('island_id', islandId);
-            if (decorations.lenght) {
+            if (decorations.length) {
                 await supabase.from('decorations').insert(
                     decorations.map(d => ({ island_id: islandId, emoji: d.emoji, px: d.px, py: d.py, scale: d.scale || 1 }))
                 );
@@ -186,7 +186,7 @@ function supabaseStore() {
             const { data: existing } = await supabase.from('hearts')
               .select('*').eq('user_id', user.id).eq('island_id', islandId).maybeSingle();
             if (existing) {
-                await supabase.from('hearts').delete().eq('user_id', islandId).maybeSingle();
+                await supabase.from('hearts').delete().eq('user_id', user.id).eq('island_id', islandId);
                 await supabase.rpc('decrement_hearts', { iid: islandId });
                 return false;
             }
@@ -209,7 +209,7 @@ function el(tag, attrs = {}, ...children) {
     for (const [k, v] of Object.entries(attrs)) {
         if (k === 'class') e.className = v;
         else if (k === 'style') e.style.cssText = v;
-        else if (l.startWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
         else e.setAttribute(k, v);
     }
     for (const c of children) {
@@ -224,18 +224,18 @@ async function renderHeader(profile) {
     header.innerHTML = '';
     header.appendChild(el('a', { href: 'index.html', class: 'logo' }, '🏝️ isla.fun'));
     const right = el('div', { class: 'header-right' });
-    if (porfile) {
+    if (profile) {
         right.appendChild(el('span', { class: 'coins' }, `🪙 ${profile.coins}`));
         right.appendChild(el('span', { class: 'username'}, `@${profile.username}`));
         right.appendChild(el('button', { class: 'btn ghost', onClick: async () => { await Store.signOut(); location.reload(); } }, 'Ieșire'));
     } else {
-        right.appendChild(el('button', { class: 'btn ptimary', onClick: showLoginModal }, 'Conectează-te'));
+        right.appendChild(el('button', { class: 'btn primary', onClick: showLoginModal }, 'Conectează-te'));
     }
     header.appendChild(right);
 }
 
 function showLoginModal() {
-    const modal = el('div', { class: 'modal-bg', onClick: (e) => { if (e.targer === modal) modal.remove(); } },
+    const modal = el('div', { class: 'modal-bg', onClick: (e) => { if (e.target === modal) modal.remove(); } },
       el('div', { class: 'modal' },
         el('h2', {}, 'Intră în ocean'),
         el('p', {}, isSupabase ? 'Îți trimitem un link magic pe email.' : 'Mod demo - orice email funcționează (datele se salveaza în browserul tău).'),

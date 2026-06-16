@@ -1,14 +1,14 @@
 create table profiles (
-    id uuid refrences auth.users on delete, cascade primary key,
+    id uuid references auth.users on delete cascade primary key,
     username text unique not null,
-    coins integer 100 not null check (coins >= 0),
+    coins integer default 100 not null check (coins >= 0),
     created_at timestamp with time zone default now() not null
 );
 
 create table islands (
     id uuid default gen_random_uuid() primary key,
-    owner_id uuid refrences profiles(id) on delete cascade not null unique,
-    x integer not null check (x >= and x < 30),
+    owner_id uuid references profiles(id) on delete cascade not null unique,
+    x integer not null check (x >= 0 and x < 30),
     y integer not null check ( y >= 0 and y < 30),
     name text default 'Insula mea' not null,
     hearts_count integer default 0 not null,
@@ -19,12 +19,19 @@ create table islands (
 
 create table decorations (
     id uuid default gen_random_uuid() primary key,
-    island_id uuid refrences islands(id) on delete cascade not null,
+    island_id uuid references islands(id) on delete cascade not null,
     emoji text not null,
     px real not null check (px >= 0 and px <= 1),
     py real not null check (py >= 0 and py <= 1),
     scale real default 1 not null,
     created_at timestamp with time zone default now() not null
+);
+
+create table hearts (
+    user_id uuid references profiles(id) on delete cascade not null,
+    island_id uuid references islands(id) on delete cascade not null,
+    created_at timestamp with time zone default now() not null,
+    primary key (user_id, island_id)
 );
 
 create or replace function public.handle_new_user()
@@ -66,7 +73,7 @@ begin
 end; $$;
 
 create or replace function increment_hearts(iid uuid)
-returns void laguage sql security definer as $$
+returns void language sql security definer as $$
     update islands set hearts_count = hearts_count + 1 where id = iid;
 $$;
 
@@ -80,7 +87,7 @@ alter table islands enable row level security;
 alter table decorations enable row level security;
 alter table hearts enable row level security;
 
-create policy "profiles_read_all" on islands for select using (true);
+create policy "profiles_read_all" on profiles for select using (true);
 create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
 
 create policy "islands_read_all" on islands for select using (true);

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang=""ro>
+<html lang="ro">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Insulă - isla.fun</title>
-<link rel="stylesheet" href="style.css"
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -15,7 +15,8 @@
     <div id="island-meta">
         <a  href="index.html" class="btn ghost">←Ocean</a>
         <span id="island-name">se încarcă...</span>
-        <button id="heart-btn" class="heart-btn"❤️ <span id="heart-count">0</span></button>
+        <span id="island-owner"></span>
+        <button id="heart-btn" class="heart-btn">❤️ <span id="heart-count">0</span></button>
     </div>
 
     <div id="island-canvas"></div>
@@ -42,7 +43,7 @@ let decorations = [];
 async function init() {
     if (!islandId) { location.href = 'index.html'; return; }
     profile = await Store.getProfile();
-    await renderHeader();
+    await renderHeader(profile);
     island = await Store.getIsland(islandId);
     if (!island) { document.getElementById('island-name').textContent = 'Insulă inexistentă'; return; }
     isOwner = profile && profile.id === island.owner_id;
@@ -79,7 +80,7 @@ function renderDecorations() {
 function makeDraggable(node, index) {
     let startX, startY, origPx, origPy, moved = false;
     const canvas = document.getElementById('island-canvas');
-    node.addEvent.Listener('mousedown', startDrag);
+    node.addEventListener('mousedown', startDrag);
     node.addEventListener('touchstart', startDrag, { passive: false });
 
     function startDrag(e) {
@@ -97,7 +98,7 @@ function makeDraggable(node, index) {
     function drag(e) {
         e.preventDefault();
         const p = getPoint(e);
-        const r = canvas.getBoundingClientReact();
+        const r = canvas.getBoundingClientRect();
         const dx = (p.x - startX) / r.width;
         const dy = (p.y - startY) / r.height;
         if (Math.abs(dx) > 0.005 || Math.abs(dy) > 0.005) moved =true;
@@ -108,7 +109,7 @@ function makeDraggable(node, index) {
     }
     function endDrag(e) {
         document.removeEventListener('mousemove', drag);
-        document.removeEventListner('touchmove', drag);
+        document.removeEventListener('touchmove', drag);
         document.removeEventListener('mouseup', endDrag);
         document.removeEventListener('touchend', endDrag);
         if (!moved) {
@@ -119,12 +120,12 @@ function makeDraggable(node, index) {
     function getPoint(e) {
         if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
         if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-        return { x: e.clienX, y: e.clientY };
+        return { x: e.clientX, y: e.clientY };
     }
 }
 
 function renderActions() {
-    const weap = document.getElementById('island-actions');
+    const wrap = document.getElementById('island-actions');
     wrap.innerHTML = '';
     if (!isOwner) return;
 
