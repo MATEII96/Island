@@ -83,5 +83,21 @@ alter table hearts enable row level security;
 create policy "profiles_read_all" on islands for select using (true);
 create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
 
+create policy "islands_read_all" on islands for select using (true);
+create policy "islands_insert_own" on islands for insert with check (auth.uid() = owner_id);
+create policy "islands_update_own" on islands for update using (auth.uid() = owner_id);
+create policy "islands_delete_own" on islands for delete using (auth.uid() = owner_id);
+
+create policy "decorations_read_all" on decorations for select using (true);
+create policy "decorations_modify_own" on decorations for all using (
+    exists (select 1 from islands where islands.id = island_id and islands.owner_id = auth.uid())
+) with check (
+    exists (select 1 from islands where islands.id = island_id and islands.owner_id = auth.uid())
+);
+
+create policy "hearts_read_all" on hearts for select using (true);
+create policy "hearts_insert_own" on hearts for insert with check (auth.uid() = user_id);
+create policy "hearts_delete_own" on hearts for delete using (auth.uid() = user_id);
+
 
 
