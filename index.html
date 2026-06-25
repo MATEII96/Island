@@ -215,6 +215,7 @@ header{
 .pkg-price { font-size: 18px; color: var(--ink); font-weight: 600; }
 .admin-note { font-size: 11px; color: var(--mint); font-weight: 600; margin-top: 4px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -241,6 +242,16 @@ const STARTING_COINS = 0;
 const DAILY_HEARTS = 3;
 const COIN_PER_HEART = 1;
 const STORAGE_KEY = 'isla_v6';
+const SESSION_KEY = 'isla_session';
+
+// ===== Shared cloud backend (Supabase) =====
+// Fill these two in from your Supabase project: Settings -> API.
+// These are PUBLIC values - safe to commit, NOT secrets, NOT personal data.
+const SUPABASE_URL = 'https://pnsxbksrsgtxwqmtdzeo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_uSnfZ-xRVBIztLXV8y6F8g_ORza8XiA';
+const WORLD_ID = 'main';
+const USE_CLOUD = /^https:\/\/.+\.supabase\.co$/.test(SUPABASE_URL) && !SUPABASE_URL.includes('YOUR-PROJECT');
+const sb = USE_CLOUD ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const MIN_PASSWORD = 6;
 const MIN_SECRET = 3;
 const MIN_USERNAME = 3;
@@ -325,18 +336,79 @@ window.setupAdmin = async (email, code) => {
     return hash;
 };
 
-function load() {
+function blankWorld() { return { profiles: {}, islands: [], decorations: {}, hearts: {} }; }
+function normalizeWorld(w) {
+    w = w || {};
+    return {
+        profiles: w.profiles || {},
+        islands: w.islands || [],
+        decorations: w.decorations || {},
+        hearts: w.hearts || {}
+    };
+}
+
+let _world = null;        // shared game data (mirrors the cloud row)
+let _pendingPushes = 0;   // >0 while a save is being written to the cloud
+
+function getSessionUser() {
+    try { return localStorage.getItem(SESSION_KEY) || null; } catch (e) { return null; }
+}
+function setSessionUser(id) {
+    try { id ? localStorage.setItem(SESSION_KEY, id) : localStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
+function loadLocalWorld() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
-    } catch (e) { }
-    const initial = { user:null, profiles: {}, islands: [], decorations: {}, hearts: {} };
-    save(initial);
-    return initial;
+        if (raw) return normalizeWorld(JSON.parse(raw));
+    } catch (e) {}
+    return blankWorld();
+}
+function persistLocalWorld(w) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(w)); } catch (e) {}
+}
+
+// load() returns the same shape as before: the shared world + this browser's
+// logged-in user. The user is per-browser (localStorage); everything else is
+// the shared ocean kept in the cloud.
+function load() {
+    if (!_world) _world = loadLocalWorld();
+    return {
+        user: getSessionUser(),
+        profiles: _world.profiles,
+        islands: _world.islands,
+        decorations: _world.decorations,
+        hearts: _world.hearts
+    };
 }
 function save(s) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
-    catch (e) { showError('Browser blocked storage: ' + e.message); }
+    setSessionUser(s.user);
+    _world = { profiles: s.profiles, islands: s.islands, decorations: s.decorations, hearts: s.hearts };
+    persistLocalWorld(_world);
+    pushWorld(_world);
+}
+
+async function pushWorld(world) {
+    if (!USE_CLOUD) return;
+    _pendingPushes++;
+    try {
+        const { error } = await sb.from('world').upsert({ id: WORLD_ID, data: world });
+        if (error) console.warn('cloud save failed:', error.message);
+    } catch (e) { console.warn('cloud save failed:', e); }
+    finally { _pendingPushes--; }
+}
+async function pullWorld() {
+    if (!USE_CLOUD) return;
+    try {
+        const { data, error } = await sb.from('world').select('data').eq('id', WORLD_ID).maybeSingle();
+        if (error) { console.warn('cloud load failed:', error.message); return; }
+        if (data && data.data) {
+            _world = normalizeWorld(data.data);
+            persistLocalWorld(_world);
+        } else {
+            // first run: seed the shared row from whatever this browser has
+            await pushWorld(_world || (_world = loadLocalWorld()));
+        }
+    } catch (e) { console.warn('cloud load failed:', e); }
 }
 function resetDailyHearts(p) {
     if (p.hearts_reset_date !== todayStr()) {
@@ -1129,9 +1201,23 @@ function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
 
 document.getElementById('logo').addEventListener('click', goOcean);
 
-checkStripeReturn();
-try { render(); }
-catch (e) { showError(e); }
+async function init() {
+    _world = loadLocalWorld();                 // instant first paint from local cache
+    checkStripeReturn();
+    try { render(); } catch (e) { showError(e); }
+    await pullWorld();                          // then pull the shared ocean
+    try { render(); } catch (e) { showError(e); }
+    if (USE_CLOUD) {
+        // keep in sync with everyone else: re-pull the shared ocean periodically
+        setInterval(async () => {
+            if (view.editing) return;           // don't disrupt active editing
+            if (_pendingPushes > 0) return;     // don't clobber an in-flight save
+            await pullWorld();
+            try { render(); } catch (e) { showError(e); }
+        }, 5000);
+    }
+}
+init();
 </script>
 
 </body>
