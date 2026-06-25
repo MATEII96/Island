@@ -381,12 +381,48 @@ function save(s) {
     pushWorld(_world);
 }
 
+function mergeWorlds(remote, local) {
+    remote = normalizeWorld(remote);
+    local = normalizeWorld(local);
+    const me = getSessionUser();
+
+    const islandById = {};
+    for (const i of remote.islands) islandById[i.id] = i;
+    for (const i of local.islands) {
+        const ex = islandById[i.id];
+        if (!ex) islandById[i.id] = i;
+        else islandById[i.id] = (i.hearts_count >= ex.hearts_count) ? i : ex;
+    }
+    const islands = Object.values(islandById);
+
+    const hearts = { ...remote.hearts, ...local.hearts };
+
+    const profiles = { ...remote.profiles };
+    for (const id in local.profiles) if (!profiles[id]) profiles[id] = local.profiles[id];
+    if (me && local.profiles[me]) profiles[me] = local.profiles[me];
+
+    const decorations = { ...remote.decorations };
+    const myIslandIds = new Set(islands.filter(i => i.owner_id === me).map(i => i.id));
+    for (const islandId in local.decorations) {
+        if (myIslandIds.has(islandId) || !(islandId in decorations)) {
+            decorations[islandId] = local.decorations[islandId];
+        }
+    }
+
+    return { profiles, islands, decorations, hearts };
+}
+
 async function pushWorld(world) {
     if (!USE_CLOUD) return;
     _pendingPushes++;
     try {
-        const { error } = await sb.from('world').upsert({ id: WORLD_ID, data: world });
+        const { data } = await sb.from('world').select('data').eq('id', WORLD_ID).maybeSingle();
+        const merged = mergeWorlds(data && data.data, world);
+        _world = merged;
+        persistLocalWorld(merged);
+        const { error } = await sb.from('world').upsert({ id: WORLD_ID, data: merged });
         if (error) console.warn('cloud save failed:', error.message);
+        else if (!view.editing) { try { render(); } catch (e) {} }
     } catch (e) { console.warn('cloud save failed:', e); }
     finally { _pendingPushes--; }
 }
