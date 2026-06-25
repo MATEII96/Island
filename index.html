@@ -244,9 +244,6 @@ const COIN_PER_HEART = 1;
 const STORAGE_KEY = 'isla_v6';
 const SESSION_KEY = 'isla_session';
 
-// ===== Shared cloud backend (Supabase) =====
-// Fill these two in from your Supabase project: Settings -> API.
-// These are PUBLIC values - safe to commit, NOT secrets, NOT personal data.
 const SUPABASE_URL = 'https://pnsxbksrsgtxwqmtdzeo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_uSnfZ-xRVBIztLXV8y6F8g_ORza8XiA';
 const WORLD_ID = 'main';
@@ -347,8 +344,8 @@ function normalizeWorld(w) {
     };
 }
 
-let _world = null;        // shared game data (mirrors the cloud row)
-let _pendingPushes = 0;   // >0 while a save is being written to the cloud
+let _world = null;
+let _pendingPushes = 0;
 
 function getSessionUser() {
     try { return localStorage.getItem(SESSION_KEY) || null; } catch (e) { return null; }
@@ -367,9 +364,6 @@ function persistLocalWorld(w) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(w)); } catch (e) {}
 }
 
-// load() returns the same shape as before: the shared world + this browser's
-// logged-in user. The user is per-browser (localStorage); everything else is
-// the shared ocean kept in the cloud.
 function load() {
     if (!_world) _world = loadLocalWorld();
     return {
@@ -405,7 +399,6 @@ async function pullWorld() {
             _world = normalizeWorld(data.data);
             persistLocalWorld(_world);
         } else {
-            // first run: seed the shared row from whatever this browser has
             await pushWorld(_world || (_world = loadLocalWorld()));
         }
     } catch (e) { console.warn('cloud load failed:', e); }
@@ -881,6 +874,7 @@ function makeDraggable(node, index, canvas) {
     };
     const onMove = (e) => {
         e.preventDefault();
+        if (!view.decoBuffer[index]) return;
         const p = pt(e);
         const r = canvas.getBoundingClientRect();
         const dx = (p.x - startX) / r.width;
@@ -890,6 +884,16 @@ function makeDraggable(node, index, canvas) {
         view.decoBuffer[index].py = Math.max(0, Math.min(1, origPy + dy));
         node.style.left = (view.decoBuffer[index].px * 100) + '%';
         node.style.top = (view.decoBuffer[index].py * 100) + '%';
+    };
+    const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchend', onUp);
+        if (!moved) {
+            view.decoBuffer.splice(index, 1);
+            render();
+        }
     };
     node.addEventListener('mousedown', onDown);
     node.addEventListener('touchstart', onDown, { passive: false });
@@ -1202,16 +1206,15 @@ function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
 document.getElementById('logo').addEventListener('click', goOcean);
 
 async function init() {
-    _world = loadLocalWorld();                 // instant first paint from local cache
+    _world = loadLocalWorld();
     checkStripeReturn();
     try { render(); } catch (e) { showError(e); }
-    await pullWorld();                          // then pull the shared ocean
+    await pullWorld();
     try { render(); } catch (e) { showError(e); }
     if (USE_CLOUD) {
-        // keep in sync with everyone else: re-pull the shared ocean periodically
         setInterval(async () => {
-            if (view.editing) return;           // don't disrupt active editing
-            if (_pendingPushes > 0) return;     // don't clobber an in-flight save
+            if (view.editing) return;
+            if (_pendingPushes > 0) return;
             await pullWorld();
             try { render(); } catch (e) { showError(e); }
         }, 5000);
