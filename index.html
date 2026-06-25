@@ -422,7 +422,6 @@ async function pushWorld(world) {
         persistLocalWorld(merged);
         const { error } = await sb.from('world').upsert({ id: WORLD_ID, data: merged });
         if (error) console.warn('cloud save failed:', error.message);
-        else if (!view.editing) { try { render(); } catch (e) {} }
     } catch (e) { console.warn('cloud save failed:', e); }
     finally { _pendingPushes--; }
 }
@@ -443,7 +442,9 @@ function resetDailyHearts(p) {
     if (p.hearts_reset_date !== todayStr()) {
         p.hearts_today = DAILY_HEARTS;
         p.hearts_reset_date = todayStr();
+        return true;
     }
+    return false;
 }
 
 let _sessionEmail = null;
@@ -529,9 +530,10 @@ const Store = {
     if (!s.user) return null;
     const p = s.profiles[s.user];
     if (!p) return null;
-    if (!p.inventory) p.inventory = {};
-    resetDailyHearts(p);
-    save(s);
+    let changed = false;
+    if (!p.inventory) { p.inventory = {}; changed = true; }
+    if (resetDailyHearts(p)) changed = true;
+    if (changed) save(s);
     return p;
   },
 
